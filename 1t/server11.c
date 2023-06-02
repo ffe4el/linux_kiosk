@@ -39,7 +39,25 @@ void handle_client(int client_socket, Movie *movies, int num_movies) {
         // 종료 명령 확인
         if (strcmp(buffer, "exit") == 0)
             break;
+        
+        // 영화 목록 전송
+        char movie_list[BUFFER_SIZE] = {0};
+        for (int i = 0; i < num_movies; i++) {
+            sprintf(movie_list, "%s\nTitle: %s\nDirector: %s\nYear: %s\nCast Members:\n", movie_list, movies[i].title, movies[i].director, movies[i].year);
 
+            for (int j = 0; j < movies[i].num_cast_members; j++) {
+                sprintf(movie_list, "%s- %s\n", movie_list, movies[i].cast[j]);
+            }
+        }
+        send(client_socket, movie_list, strlen(movie_list), 0);
+        printf("Movie list sent to the client\n");
+        // 버퍼 초기화
+        memset(buffer, 0, sizeof(buffer));      
+
+        char movie_name[50];
+        sprintf(movie_name, "Please enter the movie name");
+        send(client_socket, movie_name, strlen(movie_name), 0);
+        valread = read(client_socket, buffer, BUFFER_SIZE);
         // 영화 제목 확인
         int movie_index = -1;
         for (int i = 0; i < num_movies; i++) {
@@ -47,35 +65,38 @@ void handle_client(int client_socket, Movie *movies, int num_movies) {
                 movie_index = i;
                 break;
             }
-        }
+        } 
 
         if (movie_index >= 0) {
             // 관람연령 확인
             int minimum_age = movies[movie_index].minimum_age;
             char age_question[50];
             int num_people;
-            while(num_people==-1){
+            int ticket_price;
+            while(num_people!=-1){
+                //청불영화인데, 성인이 아니라면.. 다시 영화고르는 페이지로...
+                if(movies[movie_index].minimum_age ==19 && num_people < 19){
+                    char error_message[] = "This is R-grade moive. please choose different movie.";
+                    send(client_socket, error_message, strlen(error_message), 0);
+                    //다시 영화고르는 화면으로 돌아가게 할 예정
+                }
                 sprintf(age_question, "Please enter your age (Enter -1 to finish)");
                 send(client_socket, age_question, strlen(age_question), 0);
-                // 관람 인원 입력 받기
+                // 나이 입력받기
                 memset(buffer, 0, sizeof(buffer));
                 valread = read(client_socket, buffer, BUFFER_SIZE);
                 num_people = atoi(buffer);
-            }
-            
 
-            
-
-            // 가격 계산
-            int ticket_price;
-            if (num_people < 0)
-                ticket_price = 0;
-            else if (num_people <= 7)
-                ticket_price = num_people * 8000;
-            else if (num_people <= 18)
-                ticket_price = num_people * 12000;
-            else
-                ticket_price = num_people * 15000;
+                // 가격 계산
+                if (num_people < 0)
+                    ticket_price = 0;
+                else if ((18 < num_people) && (num_people<= 64)) //성인
+                    ticket_price += num_people * 15000;
+                else if ((13 < num_people) && (num_people<= 18)) //청소년
+                    ticket_price += num_people * 12000;
+                else    //어린이, 노인
+                    ticket_price += num_people * 8000;  
+    }
 
             // 가격 전송
             char price_message[50];
