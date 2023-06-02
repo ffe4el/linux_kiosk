@@ -10,20 +10,20 @@
 #define SOCKET_PATH "/tmp/movie_kiosk_socket"
 #define BUFFER_SIZE 1024
 #define MAX_CLIENTS 10
+#define MAX_CAST_MEMBERS 4
 
 typedef struct {
     char title[50];
     char director[50];
     char year[10];
-    char summary[10000];
+    char cast[MAX_CAST_MEMBERS][50];
+    int num_cast_members;
 } Movie;
 
 void handle_client(int client_socket, Movie *movies, int num_movies) {
     char buffer[BUFFER_SIZE];
     char *welcome_message = "🎀------------------------------🎀\n|                                |\n|  Welcome to the Movie🎬 Kiosk! | \n|                                |\n🎀------------------------------🎀";
     int valread;
-
-    printf("Server Start!\n");
 
     // 클라이언트에게 환영 메시지 전송
     send(client_socket, welcome_message, strlen(welcome_message), 0);
@@ -42,7 +42,11 @@ void handle_client(int client_socket, Movie *movies, int num_movies) {
         // 영화 목록 전송
         char movie_list[BUFFER_SIZE] = {0};
         for (int i = 0; i < num_movies; i++) {
-            sprintf(movie_list, "%s\nTitle: %s\nDirector: %s\nYear: %s\nSummary: %s\n", movie_list, movies[i].title, movies[i].director, movies[i].year, movies[i].summary);
+            sprintf(movie_list, "%s\nTitle: %s\nDirector: %s\nYear: %s\nCast Members:\n", movie_list, movies[i].title, movies[i].director, movies[i].year);
+
+            for (int j = 0; j < movies[i].num_cast_members; j++) {
+                sprintf(movie_list, "%s- %s\n", movie_list, movies[i].cast[j]);
+            }
         }
         send(client_socket, movie_list, strlen(movie_list), 0);
         printf("Movie list sent to the client\n");
@@ -60,16 +64,17 @@ int main() {
     struct sockaddr_un address;
     int addrlen = sizeof(address);
     char buffer[BUFFER_SIZE] = {0};
+    printf("Server Start!\n");
 
     // 영화 목록 초기화
     Movie movies[] = {
-        {"Avatar", "James Cameron", "2009","하반신 마비를 "},
-        {"Transformers", "Michael Bay", "2007", "지구 밖 "},
-        {"Avengers", "Joss Whedon", "2012", "쉴드의 국장 "},
-        {"The Devil Wears Prada", "David Frankel", "2006","앤드리아는 최고의 패션 매거진"},
-        {"About Time", "Richard Curtis", "2013","평범한 소년 팀은 성인이 되던 날, 아버"}
-        // {"Begin Again", "John Carney", "2013"},
-        // {"La La Land", "Damien Chazelle", "2016"}
+        {"Avatar", "James Cameron", "2009", {"Sam Worthington", "Zoe Saldana", "Sigourney Weaver", "Stephen Lang"}, 4},
+        {"Transformers", "Michael Bay", "2007", {"Shia LaBeouf", "Megan Fox", "Josh Duhamel", "Tyrese Gibson"}, 4},
+        {"Avengers", "Joss Whedon", "2012", {"Robert Downey Jr.", "Chris Evans", "Mark Ruffalo", "Chris Hemsworth"}, 4},
+        {"The Devil Wears Prada", "David Frankel", "2006", {"Meryl Streep", "Anne Hathaway", "Emily Blunt", "Stanley Tucci"}, 4},
+        {"About Time", "Richard Curtis", "2013", {"Domhnall Gleeson", "Rachel McAdams", "Bill Nighy", "Margot Robbie"}, 4},
+        {"Begin Again", "John Carney", "2013", {"Keira Knightley", "Mark Ruffalo", "Adam Levine", "Hailee Steinfeld"}, 4},
+        {"La La Land", "Damien Chazelle", "2016", {"Ryan Gosling", "Emma Stone", "John Legend", "Rosemarie DeWitt"}, 4}
     };
     int num_movies = sizeof(movies) / sizeof(movies[0]);
 
@@ -150,4 +155,3 @@ int main() {
 
     return 0;
 }
-
