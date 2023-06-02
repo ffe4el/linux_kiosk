@@ -194,6 +194,7 @@ int main() {
     pthread_mutex_init(&mutex, NULL);
 
     // Initialize server socket
+    // 소켓이름 : serverSocket
     serverSocket = socket(AF_INET, SOCK_STREAM, 0);
     if (serverSocket < 0) {
         perror("Failed to create socket");
@@ -213,6 +214,7 @@ int main() {
     }
 
     // Start listening for client connections
+    // 대기큐 생성
     if (listen(serverSocket, 10) < 0) {
         perror("Failed to listen for connections");
         exit(1);

@@ -13,7 +13,7 @@ int main() {
     struct sockaddr_in serverAddr;
     char buffer[BUFFER_SIZE];
 
-    // Create a socket
+    // 1 . Create a socket
     clientSocket = socket(AF_INET, SOCK_STREAM, 0);
     if (clientSocket < 0) {
         perror("Error in socket");
@@ -28,13 +28,13 @@ int main() {
         exit(1);
     }
 
-    // Connect to the server
+    // 2. Connect to the server
     if (connect(clientSocket, (struct sockaddr*)&serverAddr, sizeof(serverAddr)) < 0) {
         perror("Error in connecting to the server");
         exit(1);
     }
 
-    // Receive welcome message from the server
+    // 3. Receive welcome message from the server
     memset(buffer, 0, sizeof(buffer));
     if (recv(clientSocket, buffer, sizeof(buffer) - 1, 0) < 0) {
         perror("Error in receiving data from the server");
