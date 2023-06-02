@@ -33,11 +33,10 @@ int main() {
     valread = read(sock, buffer, BUFFER_SIZE);
     printf("%s\n", buffer);
 
-    // 클라이언트와의 통신
     while (1) {
         printf("Enter a message (or 'exit' to quit): ");
-        fgets(buffer, BUFFER_SIZE, stdin);
-        buffer[strcspn(buffer, "\n")] = 0;
+        fgets(buffer, BUFFER_SIZE, stdin); //movie or food 입력
+        buffer[strcspn(buffer, "\n")] = 0; // 개행 문자 제거
 
         // 서버로 메시지 전송
         send(sock, buffer, strlen(buffer), 0);
@@ -46,11 +45,36 @@ int main() {
         if (strcmp(buffer, "exit") == 0)
             break;
 
-        // 영화 목록 수신
+        // 영화 제목 입력 받기
+        memset(buffer, 0, sizeof(buffer)); //이전 버퍼값 초기화
+        valread = read(sock, buffer, BUFFER_SIZE); //영화목록 서버에서 받기
+        printf("Server: %s\n", buffer); //영화목록 출력
+        printf("Enter movie🎬 name you see. => ");
+        fgets(buffer, BUFFER_SIZE, stdin); //영화 제목 입력받기
+        buffer[strcspn(buffer, "\n")] = 0; // 개행 문자 제거
+        send(sock, buffer, strlen(buffer), 0); // 서버로 메시지 전송
+
+        // 서버 응답 수신(나이입력)
         memset(buffer, 0, sizeof(buffer));
         valread = read(sock, buffer, BUFFER_SIZE);
-        printf("Server:\n%s\n", buffer);
+        printf("Server: %s\n", buffer);
+        int bu=0;
+        while(bu == 1){
+            memset(buffer, 0, sizeof(buffer));
+            valread = read(sock, buffer, BUFFER_SIZE);
+            bu = buffer;
+            fgets(buffer, BUFFER_SIZE, stdin); //나이 입력
+        }
+        
+
+        // 서버 응답 수신
+        // memset(buffer, 0, sizeof(buffer));
+        // valread = read(sock, buffer, BUFFER_SIZE);
+        // printf("Server: %s\n", buffer);
     }
+
+
+
 
     // 소켓 닫기
     close(sock);
