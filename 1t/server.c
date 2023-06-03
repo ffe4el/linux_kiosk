@@ -32,11 +32,13 @@ void handle_client(int client_socket, Movie *movies, int num_movies) {
 
     // 클라이언트와의 통신
     while (1) {
+        memset(buffer, 0, sizeof(buffer)); // 버퍼 초기화 
         // 클라이언트로부터 메시지 수신
         valread = read(client_socket, buffer, BUFFER_SIZE);
         printf("Client: %s\n", buffer);
 
-        if(buffer=="movie"){ //movie를 선택했을시에
+        if(strcmp(buffer, "movie") == 1){ //movie를 선택했을시에
+            printf("sival");
             // 영화 목록 전송
             char movie_list[BUFFER_SIZE] = {0};
             for (int i = 0; i < num_movies; i++) {
@@ -69,7 +71,7 @@ void handle_client(int client_socket, Movie *movies, int num_movies) {
                 int minimum_age = movies[movie_index].minimum_age;
                 char age_question[50];
                 int num_people;
-                int age_ing;
+                char age_ing[3];
                 int ticket_price;
                 while(num_people!=-1){
                     sprintf(age_question, "Please enter your age (Enter -1 to finish)");
@@ -96,11 +98,11 @@ void handle_client(int client_socket, Movie *movies, int num_movies) {
                     else    //어린이, 노인
                         ticket_price += num_people * 8000;
 
-                    sprintf(age_ing, 1);
-                    send(client_socket, age_ing, 1, 0);
+                    sprintf(age_ing, "1");
+                    send(client_socket, age_ing, strlen(age_ing), 0);
                 }
-                sprintf(age_ing, 0);
-                send(client_socket, age_ing, 1, 0);
+                sprintf(age_ing, "0");
+                send(client_socket, age_ing, strlen(age_ing), 0);
 
                 // 가격 전송
                 char price_message[50];
