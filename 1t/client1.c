@@ -24,6 +24,7 @@ int main() {
     int sock = 0, valread;
     struct sockaddr_un serv_addr;
     char buffer[BUFFER_SIZE] = {0};
+    
 
     // 클라이언트 소켓 생성
     if ((sock = socket(AF_UNIX, SOCK_STREAM, 0)) < 0) {
