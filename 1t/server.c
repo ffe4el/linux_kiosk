@@ -37,8 +37,7 @@ void handle_client(int client_socket, Movie *movies, int num_movies) {
         valread = read(client_socket, buffer, BUFFER_SIZE);
         printf("Client: %s\n", buffer);
 
-        if(strcmp(buffer, "movie") == 1){ //movie를 선택했을시에
-            printf("sival");
+        if(strcmp(buffer, "movie") == 1){ //movie를 선택했을시
             // 영화 목록 전송
             char movie_list[BUFFER_SIZE] = {0};
             for (int i = 0; i < num_movies; i++) {

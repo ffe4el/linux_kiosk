@@ -24,7 +24,6 @@ int main() {
     int sock = 0, valread;
     struct sockaddr_un serv_addr;
     char buffer[BUFFER_SIZE] = {0};
-    
 
     // 클라이언트 소켓 생성
     if ((sock = socket(AF_UNIX, SOCK_STREAM, 0)) < 0) {
@@ -41,28 +40,29 @@ int main() {
         printf("\nConnection Failed\n");
         return -1;
     }
+//------------------------------------------------------------------------------------------
+
+    // 1. 서버로부터 환영 메시지 수신
+    read(sock, welcome_message, strlen(welcome_message));
+    printf("%s\n", welcome_message);
+
+    // 2. receive num_movies
+    read(sock, num_movies, sizeof(num_movies));
+    printf("num_movies : %d", num_movies);
     
-    //receive num_movies
-    valread = read(sock, buffer, BUFFER_SIZE);
-    int num_movies = atoi(buffer);
-    memset(buffer, 0, sizeof(buffer));
-    
-    
+    // 3. receive struct movie_list 
     Movie movies[MAX_MOVIES];
-    //receive struct movie_list 
     for(int i=0; i<num_movies; i++){
 	read(sock, &movies[i], sizeof(Movie));
     }
 
-    // 서버로부터 환영 메시지 수신
-    valread = read(sock, buffer, BUFFER_SIZE);
-    printf("%s\n", buffer);
+    
 
     printf("Enter a message movie or food? (or 'exit' to quit): ");
-    fgets(buffer, BUFFER_SIZE, stdin); //movie or food 입력
-    buffer[strcspn(buffer, "\n")] = 0; // 개행 문자 제거
-    // 서버로 메시지 전송
-    send(sock, buffer, strlen(buffer), 0);
+    string choose;
+    scanf("%s", choose); //movie or food 입력
+    //buffer[strcspn(buffer, "\n")] = 0; // 개행 문자 제거
+    write(sock, choose, strlen(choose));
 
     // 종료 명령 확인
     if (strcmp(buffer, "exit") == 0)

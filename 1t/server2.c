@@ -57,23 +57,24 @@ void handle_client(int client_socket, Movie *movies, int num_movies) {
     printf("Welcome message sent to the client\n");
 
     // 2. send num_movies
-    write(client_socket, num_movies, sizeof(num_movies));
+    write(client_socket, &num_movies, sizeof(num_movies));
     
-    //3. send struct movie_list
+    // 3. send struct movie_list
     for(int i=0; i<num_movies;i++){
         write(client_socket, &movies[i], sizeof(movies[i]));
     }
     
-    // 클라이언트로부터 메시지 수신
-    valread = read(client_socket, buffer, BUFFER_SIZE);
-    printf("Client: %s\n", buffer);
+    // 4. 클라이언트로부터 choose 메세지 수신
+    char choose[20];
+    read(client_socket, choose, strlen(choose));
+    printf("Client: %s\n", choose);
 
     // 종료 명령 확인
-    if (strcmp(buffer, "exit") == 0)
+    if (strcmp(choose, "exit") == 0)
         close(client_socket);
 
-    else if(strcmp(buffer, "movie") == 0){
-        // 영화 목록 전송
+    else if(strcmp(choose, "movie") == 0){
+        // 5. 영화 목록 전송
         char movie_list[BUFFER_SIZE] = {0};
         for (int i = 0; i < num_movies; i++) {
             sprintf(movie_list, "%s\nTitle: %s\nDirector: %s\nYear: %s\nminimum_age: %d\nCast Members:\n", movie_list, movies[i].title, movies[i].director, movies[i].year,movies[i].minimum_age);
@@ -81,37 +82,48 @@ void handle_client(int client_socket, Movie *movies, int num_movies) {
                 sprintf(movie_list, "%s- %s\n", movie_list, movies[i].cast[j]);
             }
         }
-        send(client_socket, movie_list, strlen(movie_list), 0);
+        write(client_socket, movie_list, strlen(movie_list));
         printf("Movie list sent to the client\n");
-        memset(buffer, 0, sizeof(buffer));// 버퍼 초기화
+        
+        int adult =1;
+        while(adult){
+            // 6. 영화제목수신
+            char movie_name[20];
+            read(client_socket, movie_name, strlen(movie_name));
 
-        //영화제목수신
-        valread = read(client_socket, buffer, BUFFER_SIZE);
-        memset(buffer, 0, sizeof(buffer)); //일단 버퍼 삭제..
-	
-        //send movie list
-        sprintf(buffer, "%s", (struct Movie*) &movies);
-        send(client_socket, buffer, strlen(buffer), 0);
-        memset(buffer, 0, sizeof(buffer));
+            //send movie list
+            // sprintf(buffer, "%s", (struct Movie*) &movies);
+            // send(client_socket, buffer, strlen(buffer), 0);
+            // memset(buffer, 0, sizeof(buffer));
+        
+            // 7. 영화인덱스수신
+            int movie_index = -1;
+            read(client_socket, &movie_index, sizeof(movie_index));
 
-	
-        //영화인덱스수신
-        valread = read(client_socket, buffer, BUFFER_SIZE);
-        int movie_index = atoi(buffer); //영화인덱스저장
-        memset(buffer, 0, sizeof(buffer));
+            // 8. 해당 영화의 남은 티켓수 보내기
+            int last_tk = movies[movie_index].last_ticket;
+            write(client_socket, &last_tk, sizeof(last_tk));
+            printf("last_ticket : %d\n", last_tk);
 
-        //해당 영화의 남은 티켓수 보내기
-        int last_tk = movies[movie_index].last_ticket;
-        sprintf(buffer, "%d", movies[movie_index].last_ticket);
-        send(client_socket, buffer, strlen(buffer), 0);
-        printf("last_ticket : %d\n", last_tk);
-        memset(buffer, 0, sizeof(buffer));
+            //9. 인원 수신
+            read(client_socket, &num_people, sizeof(num_people));
+            movies[movie_index].last_ticket -= num_people; //영화남은 인원에서 현재 인원을 뺌
 
-        //인원 수신
-        valread = read(client_socket, buffer, BUFFER_SIZE);
-        num_people = atoi(buffer);
-        movies[movie_index].last_ticket -= num_people; //영화남은 인원에서 현재 인원을 뺌
-        memset(buffer, 0, sizeof(buffer));
+            // 10,11,12. 나이 입력 받기
+            adult=1;
+            int ticket_price=0;
+            int age;
+            for(int i=0; i<num_people; i++){
+                read(client_socket, &age, sizeof(age)); //10
+                if(movies[movie_index].minimum_age == 19 && age < 19){
+                    printf("R-grade movie. Send warning message");
+                    read(client_socket, &adult, sizeof(adult)); //11
+                    adult=0; //다시 영화 고르자~~
+                }
+            }
+            read(client_socket, ticket_price, sizeof(ticket_price)); //12
+        }
+        
 
     }
     // 클라이언트 소켓 닫기
@@ -137,7 +149,11 @@ int main() {
     };
     int num_movies = sizeof(movies) / sizeof(movies[0]);
     
-     
+    // 서버 소켓 생성
+    if ((server_fd = socket(AF_UNIX, SOCK_STREAM, 0)) == 0) {
+        perror("socket failed");
+        exit(EXIT_FAILURE);
+    }
 
     // 소켓 주소 설정
     address.sun_family = AF_UNIX;
@@ -181,7 +197,7 @@ int main() {
             exit(EXIT_FAILURE);
         }
 
-        if (pid == 0) {}
+        if (pid == 0) {
             // 자식 프로세스에서 클라이언트 처리
             handle_client(client_socket, movies, num_movies);
 
@@ -200,14 +216,6 @@ int main() {
             }
             num_clients = 0;
         }
-    }
-    
-    
-
-    // 서버 소켓 생성
-    if ((server_fd = socket(AF_UNIX, SOCK_STREAM, 0)) == 0) {
-        perror("socket failed");
-        exit(EXIT_FAILURE);
     }
 
     // 소켓 닫기
