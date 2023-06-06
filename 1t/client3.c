@@ -115,7 +115,7 @@ int main() {
                 scanf("%d", &num_people);
                 //num_people[strcspn(num_people, "\n")] = 0; // 개행 문자 제거
                 if(last_tk - num_people >= 0){
-                    write(sock, &num_people, strlen(num_people)); // 서버로 메시지 전송
+                    write(sock, &num_people, sizeof(num_people)); // 서버로 메시지 전송
                     break;
                 }
                 else{

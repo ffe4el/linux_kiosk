@@ -9,7 +9,6 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 
-#define SOCKET_PATH "/tmp/movie_kiosk_socket"
 #define BUFFER_SIZE 1024
 #define MAX_CLIENTS 10
 #define MAX_CAST_MEMBERS 4
@@ -51,7 +50,6 @@ void print_seat_map(char seat_map[][5]) {
 void handle_client(int client_socket, Movie *movies, int num_movies) {
     char buffer[BUFFER_SIZE];
     char *welcome_message = "🎀------------------------------🎀\n|                                |\n|  Welcome to the Movie🎬 Kiosk! | \n|                                |\n🎀------------------------------🎀";
-    int valread;
     int num_people;
 
     // 1. 클라이언트에게 환영 메시지 전송
@@ -123,7 +121,7 @@ void handle_client(int client_socket, Movie *movies, int num_movies) {
                     adult=0; //다시 영화 고르자~~
                 }
             }
-            read(client_socket, ticket_price, sizeof(ticket_price)); //12
+            read(client_socket, &ticket_price, sizeof(ticket_price)); //12
         }
         
 
