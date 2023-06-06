@@ -66,7 +66,7 @@ void handle_client(int client_socket, Movie *movies, int num_movies) {
     
     // 4. 클라이언트로부터 choose 메세지 수신
     char choose[20];
-    read(client_socket, choose, strlen(choose));
+    valread = read(client_socket, choose, strlen(choose));
     printf("Client: %s\n", choose);
 
     // 종료 명령 확인
@@ -119,6 +119,9 @@ void handle_client(int client_socket, Movie *movies, int num_movies) {
                     printf("R-grade movie. Send warning message");
                     read(client_socket, &adult, sizeof(adult)); //11
                     adult=0; //다시 영화 고르자~~
+                }
+                if (adult == 0){
+                    continue;
                 }
             }
             read(client_socket, &ticket_price, sizeof(ticket_price)); //12

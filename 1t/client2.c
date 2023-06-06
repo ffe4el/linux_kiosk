@@ -48,7 +48,7 @@ int main() {
 
     // 1. 서버로부터 환영 메시지 수신
     valread = read(sock, welcome_message, sizeof(welcome_message) - 1); // 수정: read의 길이 인자 수정
-    welcome_message[valread] = '\0'; // 널 문자 추가
+    //welcome_message[valread] = '\0'; // 널 문자 추가
     printf("%s\n", welcome_message);
 
     // 2. receive num_movies
@@ -62,7 +62,6 @@ int main() {
     }
 
     
-
     printf("Enter a message movie or food? (or 'exit' to quit): ");
     char choose[20];
     scanf("%s", choose); //movie or food 입력
@@ -70,17 +69,17 @@ int main() {
     write(sock, choose, strlen(choose));
 
     // 종료 명령 확인
-    if (strcmp(choose, "exit") == 0)
+    if (strcmp(choose, "exit") == 0){
         // 소켓 닫기
     	close(sock);
-
+    }
     else if(strcmp(choose, "movie") == 0){
         // 5. 영화목록 서버에서 받기
         read(sock, movie_list, sizeof(movie_list)); 
         printf("Server: %s\n", movie_list); //영화목록 출력
 
         int adult =1;
-        while(adult){
+        while(1){
             // 6. 영화 제목 입력 받기
             char movie_name[20];
             printf("Enter movie🎬 name you see. => ");
@@ -127,7 +126,6 @@ int main() {
             }
 
             // 10,11,12. 나이 입력 받기
-            adult=1;
             int ticket_price=0;
             int age;
             for(int i=0; i<num_people; i++){
@@ -137,6 +135,7 @@ int main() {
                     printf("This is R-grade moive. please choose different movie.");
                     write(sock, &adult,sizeof(adult)); //11
                     adult=0; //다시 영화 고르자~~
+                    break;
                 }
                 // 가격 계산
                 if (age < 0)
@@ -147,6 +146,9 @@ int main() {
                     ticket_price += 12000;
                 else    //어린이, 노인
                     ticket_price += 8000;
+            }
+            if (adult == 0){
+                continue;
             }
             write(sock, &ticket_price, sizeof(ticket_price)); //12
             printf("Total price : %d", ticket_price);
