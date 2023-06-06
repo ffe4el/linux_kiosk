@@ -23,6 +23,8 @@ typedef struct {
 int main() {
     int sock = 0, valread;
     struct sockaddr_un serv_addr;
+    int num_movies;
+    char *welcome_message;
     char buffer[BUFFER_SIZE] = {0};
 
     // 클라이언트 소켓 생성
@@ -59,7 +61,7 @@ int main() {
     
 
     printf("Enter a message movie or food? (or 'exit' to quit): ");
-    string choose;
+    char choose[20];
     scanf("%s", choose); //movie or food 입력
     //buffer[strcspn(buffer, "\n")] = 0; // 개행 문자 제거
     write(sock, choose, strlen(choose));

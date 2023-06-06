@@ -137,7 +137,11 @@ int main() {
     };
     int num_movies = sizeof(movies) / sizeof(movies[0]);
     
-     
+    // 서버 소켓 생성
+    if ((server_fd = socket(AF_UNIX, SOCK_STREAM, 0)) == 0) {
+        perror("socket failed");
+        exit(EXIT_FAILURE);
+    }
 
     // 소켓 주소 설정
     address.sun_family = AF_UNIX;
@@ -181,7 +185,7 @@ int main() {
             exit(EXIT_FAILURE);
         }
 
-        if (pid == 0) {}
+        if (pid == 0) {
             // 자식 프로세스에서 클라이언트 처리
             handle_client(client_socket, movies, num_movies);
 
@@ -204,11 +208,7 @@ int main() {
     
     
 
-    // 서버 소켓 생성
-    if ((server_fd = socket(AF_UNIX, SOCK_STREAM, 0)) == 0) {
-        perror("socket failed");
-        exit(EXIT_FAILURE);
-    }
+    
 
     // 소켓 닫기
     close(server_fd);
