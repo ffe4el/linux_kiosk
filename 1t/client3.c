@@ -112,7 +112,7 @@ int main() {
             while(1){
                 printf("Enter the number of seats you want to book:  => ");
                 // fgets(num_people, sizeof(num_people), stdin); 
-                scanf("%d", num_people);
+                scanf("%d", &num_people);
                 //num_people[strcspn(num_people, "\n")] = 0; // 개행 문자 제거
                 if(last_tk - num_people >= 0){
                     write(sock, &num_people, strlen(num_people)); // 서버로 메시지 전송
@@ -131,7 +131,7 @@ int main() {
             int age;
             for(int i=0; i<num_people; i++){
                 //fgets(age, sizeof(age), stdin); //나이입력받기
-                scanf("%d", age);
+                scanf("%d", &age);
                 //age[strcspn(age, "\n")] = 0; // 개행 문자 제거
                 write(sock, &age, sizeof(age)); //10
                 if(movies[movie_index].minimum_age == 19 && age < 19){
