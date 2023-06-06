@@ -121,7 +121,7 @@ void handle_client(int client_socket, Movie *movies, int num_movies) {
                     adult=0; //다시 영화 고르자~~
                 }
             }
-            read(client_socket, ticket_price, sizeof(ticket_price)); //12
+            read(client_socket, &ticket_price, sizeof(ticket_price)); //12
         }
         
 
