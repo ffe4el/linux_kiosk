@@ -93,7 +93,6 @@ void handle_client(int client_socket, Movie *movies, int num_movies) {
             while(1){
                 read(client_socket, &num_people, sizeof(num_people));
                 if(last_tk-num_people >= 0){
-                    movies[movie_index].last_ticket -= num_people; //영화남은 인원에서 현재 인원을 뺌
                     break;
                 }
                 else{
@@ -120,6 +119,7 @@ void handle_client(int client_socket, Movie *movies, int num_movies) {
             read(client_socket, &ticket_price, sizeof(ticket_price)); //12
             printf("ticket price : %d\n", ticket_price);
             printf("last_ticket : %d\n", movies[movie_index].last_ticket);
+            movies[movie_index].last_ticket -= num_people; //영화남은 인원에서 현재 인원을 뺌
             break;
         }
     }
@@ -225,3 +225,5 @@ int main() {
     return 0;
 }
 
+//지금 문제점이 클라이언트를 한번 실행해서 7번 영화로 티켓 4장을 소비하면 다음 클라이언트가 들어올때 
+//7번영화 티켓이 16장으로 남아야하는데... 왜 반영이 안될까
