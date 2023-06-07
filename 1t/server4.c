@@ -90,12 +90,7 @@ void handle_client(int client_socket, Movie *movies, int num_movies) {
             printf("last_ticket : %d\n", last_tk);
 
             //9. 인원 수신
-            
-            // int sig;
-            // read(client_socket, &sig, sizeof(sig));
-            printf("before read num_people\n");
             while(1){
-                printf("read num_people\n");
                 read(client_socket, &num_people, sizeof(num_people));
                 if(last_tk-num_people >= 0){
                     movies[movie_index].last_ticket -= num_people; //영화남은 인원에서 현재 인원을 뺌
@@ -115,6 +110,7 @@ void handle_client(int client_socket, Movie *movies, int num_movies) {
                 read(client_socket, &age, sizeof(age)); //10
                 if(movies[movie_index].minimum_age == 19 && age < 19){
                     printf("R-grade movie. Send warning message\n");
+                    adult = 0;
                     break;
                 }
             }

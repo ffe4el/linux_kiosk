@@ -111,10 +111,6 @@ int main() {
 
             // 9. 사람 수 입력받기
             int num_people=0;
-            // int sig;
-            // printf("plz print 1");
-            // scanf("%d", &sig);
-            // write(sock, &sig, sizeof(sig));
             while(1){
                 printf("Enter the number of seats you want to book:  => ");
                 scanf("%d" , &num_people);
@@ -139,8 +135,8 @@ int main() {
                 scanf("%d", &age);
                 write(sock, &age, sizeof(age)); //10
                 if(movies[movie_index].minimum_age == 19 && age < 19){
-                    printf("This is R-grade moive. please choose different movie.");
-                    // write(sock, &adult,sizeof(adult)); //11
+                    printf("This is R-grade moive. please choose different movie.\n");
+                    adult = 0;
                     break;
                 }
                 // 가격 계산
