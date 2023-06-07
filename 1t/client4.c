@@ -127,7 +127,7 @@ int main() {
                 }
             }
 
-            // 10,11,12. 나이 입력 받기
+            // 10,11. 나이 입력 받기
             int ticket_price=0;
             int age;
             for(int i=0; i<num_people; i++){
@@ -152,7 +152,7 @@ int main() {
             if (adult == 0){
                 continue;
             }
-            write(sock, &ticket_price, sizeof(ticket_price)); //12
+            write(sock, &ticket_price, sizeof(ticket_price)); //11
             printf("Total price : %d\n", ticket_price);
             break;
         }

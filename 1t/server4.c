@@ -101,7 +101,7 @@ void handle_client(int client_socket, Movie *movies, int num_movies) {
                 }
             }
             
-            // 10,11,12. 나이 입력 받기
+            // 10,11. 나이 입력 받기
             adult=1;
             int ticket_price=0;
             int age;
@@ -116,7 +116,7 @@ void handle_client(int client_socket, Movie *movies, int num_movies) {
             if (adult == 0){
                 continue;
             }
-            read(client_socket, &ticket_price, sizeof(ticket_price)); //12
+            read(client_socket, &ticket_price, sizeof(ticket_price)); //11
             printf("ticket price : %d\n", ticket_price);
             printf("last_ticket : %d\n", movies[movie_index].last_ticket);
             movies[movie_index].last_ticket -= num_people; //영화남은 인원에서 현재 인원을 뺌
