@@ -142,9 +142,12 @@ void handle_client(int client_socket, Movie *movies, int num_movies) {
                     //현재 좌석 상황 보내기
                     for (int i = 0; i < NUM_ROWS; i++) {
                         for (int j = 0; j < NUM_COLS; j++) {
-                            write(client_socket, seat_status[i][j], sizeof(seat_status[i][j]));//12
+                            printf("[%c]", seat_status[i][j]);
+                            write(client_socket, &seat_status[i][j], sizeof(seat_status[i][j]));//12
                         }
+                        printf("\n");
                     }
+                    printf("\n");
 
                     //좌석입력받기
                     read(client_socket, &row, sizeof(row));//13
@@ -160,7 +163,7 @@ void handle_client(int client_socket, Movie *movies, int num_movies) {
                         printf("Seat Status:\n");
                         for (int i = 0; i < NUM_ROWS; i++) {
                             for (int j = 0; j < NUM_COLS; j++) {
-                                write(client_socket, seat_status[i][j], sizeof(seat_status[i][j]));//12
+                                write(client_socket, &seat_status[i][j], sizeof(seat_status[i][j]));//12
                                 // printf("[%c] ", seat_status[i][j]);
                             }
                             // printf("\n");
@@ -229,6 +232,16 @@ int main() {
 
     //좌석 초기화
     init_seat_status();
+    //현재 좌석 상황 받고 출력하기
+    printf("Seat Status:\n");
+    for (int i = 0; i < NUM_ROWS; i++) {
+        for (int j = 0; j < NUM_COLS; j++) {
+            // read(sock, &seat_status[i][j], sizeof(seat_status[i][j]));//12
+            printf("[%c] ", seat_status[i][j]);
+        }
+        printf("\n");
+    }
+    printf("\n");
 
     // 다중 클라이언트 처리
     while (1) {

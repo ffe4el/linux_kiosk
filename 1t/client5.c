@@ -93,7 +93,7 @@ int main() {
             printf("\n");
         }
 
-        printf("0-13 : 8000won\n14-18 : 12000won\n19-64 : 15000won\nover 64 : ");
+        printf("0-13 : 8000won\n14-18 : 12000won\n19-64 : 15000won\nover 64 : 8000won\n");
 
 
         int adult =1;
@@ -169,7 +169,7 @@ int main() {
                     printf("Seat Status:\n");
                     for (int i = 0; i < NUM_ROWS; i++) {
                         for (int j = 0; j < NUM_COLS; j++) {
-                            read(sock, seat_status[i][j], sizeof(seat_status[i][j]));//12
+                            read(sock, &seat_status[i][j], sizeof(seat_status[i][j]));//12
                             printf("[%c] ", seat_status[i][j]);
                         }
                         printf("\n");
@@ -192,7 +192,7 @@ int main() {
                         printf("Seat Status:\n");
                         for (int i = 0; i < NUM_ROWS; i++) {
                             for (int j = 0; j < NUM_COLS; j++) {
-                                read(sock, seat_status[i][j], sizeof(seat_status[i][j]));//12
+                                read(sock, &seat_status[i][j], sizeof(seat_status[i][j]));//12
                                 printf("[%c] ", seat_status[i][j]);
                             }
                             printf("\n");
