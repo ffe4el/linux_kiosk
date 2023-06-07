@@ -9,7 +9,10 @@
 #define BUFFER_SIZE 1024
 #define MAX_CAST_MEMBERS 4
 #define MAX_MOVIES 10
+#define NUM_ROWS 4
+#define NUM_COLS 5
 
+char seat_status[NUM_ROWS][NUM_COLS];
 
 typedef struct {
     int index;
@@ -158,6 +161,52 @@ int main() {
             }
             write(sock, &ticket_price, sizeof(ticket_price)); //11
             printf("Total price : %d\n", ticket_price);
+
+            //12. 좌석 선택하기
+            for(int i=0; i<num_people; i++){ //입력된 사람 수만큼 좌석 선택
+                while(1){
+                    //현재 좌석 상황 받고 출력하기
+                    printf("Seat Status:\n");
+                    for (int i = 0; i < NUM_ROWS; i++) {
+                        for (int j = 0; j < NUM_COLS; j++) {
+                            read(sock, seat_status[i][j], sizeof(seat_status[i][j]));//12
+                            printf("[%c] ", seat_status[i][j]);
+                        }
+                        printf("\n");
+                    }
+                    printf("\n");
+
+                    int row, col;
+                    //앉고 싶은 좌석 입력받기
+                    printf("Enter the row and column of the seat you want to select (e.g., 3 4): ");
+                    scanf("%d %d", &row, &col);
+                    write(sock, &row, sizeof(row));//13
+                    write(sock, &col, sizeof(col));//14
+
+                    int result;
+                    read(sock, &result, sizeof(result));//15. 좌석 유효 검사 받기, 좌석 선점하기
+                    if (result) {
+                        printf("Seat selected: %d행 %d열\n", row, col);
+                        write(sock, "Seat selection successful", strlen("Seat selection successful") + 1);//16
+                        //현재 상태 보여주기
+                        printf("Seat Status:\n");
+                        for (int i = 0; i < NUM_ROWS; i++) {
+                            for (int j = 0; j < NUM_COLS; j++) {
+                                read(sock, seat_status[i][j], sizeof(seat_status[i][j]));//12
+                                printf("[%c] ", seat_status[i][j]);
+                            }
+                            printf("\n");
+                        }
+                        printf("\n");
+                        break;
+                    } else {
+                        printf("Seat selection failed: %d행 %d열\n", row, col);
+                        write(sock, "Seat selection failed", strlen("Seat selection failed") + 1);//17
+                        continue;
+                    }
+
+                }
+            }
         }
     }
     // 소켓 닫기
