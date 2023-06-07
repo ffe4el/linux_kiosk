@@ -77,12 +77,10 @@ int main() {
     	close(sock);
     }
     else if(choose==1){
-        // 5. 영화목록 서버에서 받기
+        // 영화목록 보여주기
         printf("Movie List~!\n");
-        // read(sock, movie_list, sizeof(movie_list)); 
-        // printf("Server: %s\n", movie_list); //영화목록 출력
         for (int i = 0; i < num_movies; i++) {
-            printf("index : %d\nTitle: %s\nDirector: %s\nYear: %s\nminimum_age: %d\nCast Members:\n", movies[i].index, movies[i].title, movies[i].director, movies[i].year,movies[i].minimum_age);
+            printf("index : %d\nTitle: %s\nDirector: %s\nYear: %s\nminimum_age: %d\nAvailable Ticket:%d\nCast Members:\n", movies[i].index, movies[i].title, movies[i].director, movies[i].year,movies[i].minimum_age,movies[i].last_ticket);
             for (int j = 0; j < movies[i].num_cast_members; j++) {
                 printf("- %s\n", movies[i].cast[j]);
             }
@@ -99,16 +97,9 @@ int main() {
             scanf("%d", &movie_index1); //영화 제목 입력받기
             write(sock, &movie_index1, sizeof(movie_index1)); // 서버로 메시지 전송
 
-            // 7. 고른 영화에 인덱스 부여하기
-            int movie_index = -1;
-            for (int i = 0; i < num_movies; i++) {
-                if (movies[i].index == i+1) {
-                    movie_index = i;
-                    write(sock, &movie_index, sizeof(movie_index)); // 서버로 메시지 전송
-                    break;
-                }
-            }
-            if (movie_index == -1) {
+            // 고른 영화에 인덱스 부여하기
+            int movie_index = movie_index1-1;
+            if (movie_index > num_movies-1 && movie_index1 < 0) {
                 printf("Invalid movie selection.\n");
                 continue;
             }
@@ -120,6 +111,10 @@ int main() {
 
             // 9. 사람 수 입력받기
             int num_people=0;
+            // int sig;
+            // printf("plz print 1");
+            // scanf("%d", &sig);
+            // write(sock, &sig, sizeof(sig));
             while(1){
                 printf("Enter the number of seats you want to book:  => ");
                 scanf("%d" , &num_people);
@@ -145,8 +140,7 @@ int main() {
                 write(sock, &age, sizeof(age)); //10
                 if(movies[movie_index].minimum_age == 19 && age < 19){
                     printf("This is R-grade moive. please choose different movie.");
-                    write(sock, &adult,sizeof(adult)); //11
-                    adult=0; //다시 영화 고르자~~
+                    // write(sock, &adult,sizeof(adult)); //11
                     break;
                 }
                 // 가격 계산

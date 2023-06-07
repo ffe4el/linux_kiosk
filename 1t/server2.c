@@ -17,6 +17,7 @@
 
 
 typedef struct {
+    int index;
     char title[50];
     char director[50];
     char year[10];
@@ -65,36 +66,31 @@ void handle_client(int client_socket, Movie *movies, int num_movies) {
     }
     
     // 4. 클라이언트로부터 choose 메세지 수신
-    char choose[20];
-    valread = read(client_socket, choose, strlen(choose));
-    printf("Client: %s\n", choose);
+    int choose;
+    valread = read(client_socket, &choose, sizeof(choose));
+    printf("Client: %d\n", choose);
 
     // 종료 명령 확인
-    if (strcmp(choose, "exit") == 0)
+    if (choose==3)
         close(client_socket);
 
-    else if(strcmp(choose, "movie") == 0){
+    else if(choose==1){
         // 5. 영화 목록 전송
-        char movie_list[BUFFER_SIZE] = {0};
-        for (int i = 0; i < num_movies; i++) {
-            sprintf(movie_list, "%s\nTitle: %s\nDirector: %s\nYear: %s\nminimum_age: %d\nCast Members:\n", movie_list, movies[i].title, movies[i].director, movies[i].year,movies[i].minimum_age);
-            for (int j = 0; j < movies[i].num_cast_members; j++) {
-                sprintf(movie_list, "%s- %s\n", movie_list, movies[i].cast[j]);
-            }
-        }
-        write(client_socket, movie_list, strlen(movie_list));
-        printf("Movie list sent to the client\n");
+        // char movie_list[1000] = {0};
+        // for (int i = 0; i < num_movies; i++) {
+        //     sprintf(movie_list, "%s\nTitle: %s\nDirector: %s\nYear: %s\nminimum_age: %d\nCast Members:\n", movie_list, movies[i].title, movies[i].director, movies[i].year,movies[i].minimum_age);
+        //     for (int j = 0; j < movies[i].num_cast_members; j++) {
+        //         sprintf(movie_list, "%s- %s\n", movie_list, movies[i].cast[j]);
+        //     }
+        // }
+        // write(client_socket, movie_list, strlen(movie_list));
+        // printf("Movie list sent to the client\n");
         
         int adult =1;
         while(adult){
             // 6. 영화제목수신
-            char movie_name[20];
-            read(client_socket, movie_name, strlen(movie_name));
-
-            //send movie list
-            // sprintf(buffer, "%s", (struct Movie*) &movies);
-            // send(client_socket, buffer, strlen(buffer), 0);
-            // memset(buffer, 0, sizeof(buffer));
+            int movie_index1;
+            read(client_socket, &movie_index1, sizeof(movie_index1));
         
             // 7. 영화인덱스수신
             int movie_index = -1;
@@ -106,9 +102,18 @@ void handle_client(int client_socket, Movie *movies, int num_movies) {
             printf("last_ticket : %d\n", last_tk);
 
             //9. 인원 수신
-            read(client_socket, &num_people, sizeof(num_people));
-            movies[movie_index].last_ticket -= num_people; //영화남은 인원에서 현재 인원을 뺌
-
+            while(1){
+                read(client_socket, &num_people, sizeof(num_people));
+                if(last_tk-num_people >= 0){
+                    movies[movie_index].last_ticket -= num_people; //영화남은 인원에서 현재 인원을 뺌
+                    break;
+                }
+                else{
+                    printf("exceed the number of available ticket.");
+                    continue;
+                }
+            }
+            
             // 10,11,12. 나이 입력 받기
             adult=1;
             int ticket_price=0;
@@ -142,13 +147,13 @@ int main() {
 
     // 영화 목록 초기화
     Movie movies[] = {
-        {"Avatar", "James Cameron", "2009", {"Sam Worthington", "Zoe Saldana", "Sigourney Weaver", "Stephen Lang"}, 4, 12, 20},
-        {"Transformers", "Michael Bay", "2007", {"Shia LaBeouf", "Megan Fox", "Josh Duhamel", "Tyrese Gibson"}, 4, 12, 20},
-        {"Avengers", "Joss Whedon", "2012", {"Robert Downey Jr.", "Chris Evans", "Mark Ruffalo", "Chris Hemsworth"}, 4, 12, 20},
-        {"The Devil Wears Prada", "David Frankel", "2006", {"Meryl Streep", "Anne Hathaway", "Emily Blunt", "Stanley Tucci"}, 4, 15, 20},
-        {"About Time", "Richard Curtis", "2013", {"Domhnall Gleeson", "Rachel McAdams", "Bill Nighy", "Margot Robbie"}, 4, 12, 20},
-        {"Begin Again", "John Carney", "2013", {"Keira Knightley", "Mark Ruffalo", "Adam Levine", "Hailee Steinfeld"}, 4, 12, 20},
-        {"La La Land", "Damien Chazelle", "2016", {"Ryan Gosling", "Emma Stone", "John Legend", "Rosemarie DeWitt"}, 4, 12, 20}
+        {1, "Avatar", "James Cameron", "2009", {"Sam Worthington", "Zoe Saldana", "Sigourney Weaver", "Stephen Lang"}, 4, 12, 20},
+        {2, "Transformers", "Michael Bay", "2007", {"Shia LaBeouf", "Megan Fox", "Josh Duhamel", "Tyrese Gibson"}, 4, 12, 20},
+        {3, "Avengers", "Joss Whedon", "2012", {"Robert Downey Jr.", "Chris Evans", "Mark Ruffalo", "Chris Hemsworth"}, 4, 12, 20},
+        {4, "The Devil Wears Prada", "David Frankel", "2006", {"Meryl Streep", "Anne Hathaway", "Emily Blunt", "Stanley Tucci"}, 4, 15, 20},
+        {5, "About Time", "Richard Curtis", "2013", {"Domhnall Gleeson", "Rachel McAdams", "Bill Nighy", "Margot Robbie"}, 4, 12, 20},
+        {6, "Begin Again", "John Carney", "2013", {"Keira Knightley", "Mark Ruffalo", "Adam Levine", "Hailee Steinfeld"}, 4, 12, 20},
+        {7, "La La Land", "Damien Chazelle", "2016", {"Ryan Gosling", "Emma Stone", "John Legend", "Rosemarie DeWitt"}, 4, 12, 20}
     };
     int num_movies = sizeof(movies) / sizeof(movies[0]);
     
