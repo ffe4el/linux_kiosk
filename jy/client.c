@@ -33,12 +33,21 @@ typedef struct {
 
    while(1)
    {
-         printf("소극장 음식 메뉴\n");
-         printf("※0을 기입하시면 계산 메뉴로 이동※");
-      read(clientfd, Sendlist, MAX); // 1 
-      printf("%s\n", Sendlist);
+      printf("소극장 음식 메뉴\n");
+      printf("※ 0을 기입하시면 계산 메뉴로 이동 ※\n");
+      read(clientfd, &listSize, sizeof(listSize));//1
+      Food foods[MAXLINE] = {0};
+      for(int i = 0 ; i < listSize ; i++){
+         read(clientfd, &foods[i], sizeof(foods[i]));//2
+      }
+      
+      for(int i = 0 ; i < listSize ; i++){
+         printf("[%d] ", i+1);
+        printf("%s %d %d\n", foods[i].name, foods[i].price, foods[i].quantity);
+
+      }
+      
       if(price_sum > 0) printf("현재 계산하실 금액은 %d원 입니다.\n", price_sum);
-      read(clientfd, &listSize, sizeof(int)); // 2
 
          while(1){ // 인덱스 기입창
             printf("원하는 음식의 인덱스를 기입해주세요. : ");

@@ -16,17 +16,6 @@
 #define NUM_ROWS 4
 #define NUM_COLS 5
 
-char seat_status[NUM_ROWS][NUM_COLS];
-
-void init_seat_status() {
-    for (int i = 0; i < NUM_ROWS; i++) {
-        for (int j = 0; j < NUM_COLS; j++) {
-            seat_status[i][j] = 'O'; // 예약 가능한 좌석으로 초기화
-        }
-    }
-}
-
-
 typedef struct {
     int index;
     char title[50];
@@ -36,41 +25,45 @@ typedef struct {
     int num_cast_members;
     int minimum_age;
     int last_ticket; //남은 티켓 개수
+    int seat_status[NUM_ROWS][NUM_COLS];
 } Movie;
 
-typedef struct {
-    int client_sock;
-    char seat_map[4][5];
-} ClientInfo;
+// typedef struct {
+//     int client_sock;
+//     char seat_map[4][5];
+// } ClientInfo;
 
 
-int select_seat(int row, int col) {
-    if (row < 0 || row >= NUM_ROWS || col < 0 || col >= NUM_COLS) {
-        return 0; // 좌석이 유효하지 않음
-    }
+// int select_seat(int *seat_status,int row, int col) {
+//     if (row < 0 || row >= NUM_ROWS || col < 0 || col >= NUM_COLS) {
+//         return 0; // 좌석이 유효하지 않음
+//     }
 
-    if (seat_status[row][col] == 'X') {
-        return 0; // 이미 예약된 좌석
-    }
+//     if (seat_status[row][col] == 1) {
+//         return 0; // 이미 예약된 좌석
+//     }
 
-    seat_status[row][col] = 'X'; // 좌석 예약
-    return 1; // 좌석 예약 성공
-}
+//     seat_status[row][col] = 1; // 좌석 예약
+//     return 1; // 좌석 예약 성공
+// }
 
 
 
 // 클라이언트와의 통신
-void handle_client(int client_socket, Movie *movies, int num_movies) {
+void handle_client(int client_socket, FILE *fp, int num_movies) {
     char buffer[BUFFER_SIZE];
     char *welcome_message = "🎀------------------------------🎀\n|                                |\n|  Welcome to the Movie🎬 Kiosk! | \n|                                |\n🎀------------------------------🎀";
     int valread;
     int num_people;
+    Movie *movies = (Movie *)malloc(num_movies * sizeof(Movie));
 
     // 1. 클라이언트에게 환영 메시지 전송
     write(client_socket, welcome_message, strlen(welcome_message));
     printf("Welcome message sent to the client\n");
 
     // 2. send num_movies
+    fseek(fp, 0, SEEK_SET);
+    fread(movies, sizeof(Movie), num_movies, fp);
     write(client_socket, &num_movies, sizeof(num_movies));
     
     // 3. send struct movie_list
@@ -84,8 +77,32 @@ void handle_client(int client_socket, Movie *movies, int num_movies) {
     printf("Client: %d\n", choose);
 
     // 종료 명령 확인
-    if (choose==3)
+    if (choose==3){
         close(client_socket);
+    }
+        
+    //관리자모드
+    int pwd=0;
+    else if (choose==4){
+        read(client_socket, &pwd, sizeof(pwd));//비번 받기
+        if(pwd==1234){
+            printf("welcom! manager~");//관리자모드로 들어오기 성공
+            printf("add food\n");
+            read(sock, &chose, sizeof(chose));//선택 받기
+            fseek(fp,0,SEEK_END);//파일위치 맨뒤로 옮기고
+            
+            printf("%s %s %s %s %s %s %s %s %s\n", "Index", "Title", "Director", "Year", "cast","cast_num","Minimum_age","Last_ticket","Seats");
+            scanf("%d %s %s %s %s %d %d %s %s\n", &movie[num_movies+1].index, movie[num_movies+1].title, movie[num_movies+1].director, movie[num_movies+1].cast, );
+            num_movies = num_movies+1;
+            fwrite();
+
+            
+            
+        }
+        else{ //비번이 틀리면 바로 종료
+            close(sock);
+        }
+    }
 
     else if(choose==1){
         int adult =1;
@@ -134,7 +151,6 @@ void handle_client(int client_socket, Movie *movies, int num_movies) {
             printf("ticket price : %d\n", ticket_price);
             printf("last_ticket : %d\n", movies[movie_index].last_ticket);
             movies[movie_index].last_ticket -= num_people; //영화남은 인원에서 현재 인원을 뺌
-            break;
             
             //12. 좌석 선택하기
             for(int i=0; i<num_people; i++){
@@ -142,44 +158,54 @@ void handle_client(int client_socket, Movie *movies, int num_movies) {
                     //현재 좌석 상황 보내기
                     for (int i = 0; i < NUM_ROWS; i++) {
                         for (int j = 0; j < NUM_COLS; j++) {
-                            printf("[%c]", seat_status[i][j]);
-                            write(client_socket, &seat_status[i][j], sizeof(seat_status[i][j]));//12
+                            write(client_socket, &movies[movie_index].seat_status[i][j], sizeof(movies[movie_index].seat_status[i][j]));//12
+                            // printf("[%d]", movies[movie_index].seat_status[i][j]);
                         }
-                        printf("\n");
+                        // printf("\n");
                     }
-                    printf("\n");
+                    // printf("\n");
 
                     //좌석입력받기
                     read(client_socket, &row, sizeof(row));//13
                     read(client_socket, &col, sizeof(col));//14
-
+                    row = row-1;
+                    col = col-1;
+                    int seat_selection_result;
                     //좌석이 유효한지 검사
-                    int seat_selection_result = select_seat(row, col);
+                    if (row < 0 || row >= NUM_ROWS || col < 0 || col >= NUM_COLS) {
+                        seat_selection_result = 0; // 좌석이 유효하지 않음
+                    }
+                    if (movies[movie_index].seat_status[row][col] == 1) {
+                        seat_selection_result = 0; // 이미 예약된 좌석
+                    }
+                    else if(movies[movie_index].seat_status[row][col] == 0){
+                        movies[movie_index].seat_status[row][col] = 1; // 좌석 예약
+                        seat_selection_result = 1;
+                    }
                     write(client_socket, &seat_selection_result, sizeof(seat_selection_result));//15
                     if (seat_selection_result) {
                         printf("Seat selected: %d행 %d열\n", row, col);
-                        write(client_socket, "Seat selection successful", strlen("Seat selection successful") + 1);//16
                         //현재 상태 보여주기
                         printf("Seat Status:\n");
                         for (int i = 0; i < NUM_ROWS; i++) {
                             for (int j = 0; j < NUM_COLS; j++) {
-                                write(client_socket, &seat_status[i][j], sizeof(seat_status[i][j]));//12
-                                // printf("[%c] ", seat_status[i][j]);
+                                write(client_socket, &movies[movie_index].seat_status[i][j], sizeof(movies[movie_index].seat_status[i][j]));
                             }
-                            // printf("\n");
                         }
-                        // printf("\n");
                         break;
                     } else {
                         printf("Seat selection failed: %d행 %d열\n", row, col);
-                        write(client_socket, "Seat selection failed", strlen("Seat selection failed") + 1);//17
                         continue;
                     }
                 }
             }
+            fseek(fp, (movie_index)*sizeof(Movie),SEEK_SET);
+            fwrite(&movies[movie_index], sizeof(Movie), 1, fp);
+            break;
         }
     }
     // 클라이언트 소켓 닫기
+    free(movies);
     close(client_socket);
 }
 
@@ -192,17 +218,32 @@ int main() {
 
     // 영화 목록 초기화
     Movie movies[] = {
-        {1, "Avatar", "James Cameron", "2009", {"Sam Worthington", "Zoe Saldana", "Sigourney Weaver", "Stephen Lang"}, 4, 12, 20},
-        {2, "Transformers", "Michael Bay", "2007", {"Shia LaBeouf", "Megan Fox", "Josh Duhamel", "Tyrese Gibson"}, 4, 12, 20},
-        {3, "Avengers", "Joss Whedon", "2012", {"Robert Downey Jr.", "Chris Evans", "Mark Ruffalo", "Chris Hemsworth"}, 4, 12, 20},
-        {4, "The Devil Wears Prada", "David Frankel", "2006", {"Meryl Streep", "Anne Hathaway", "Emily Blunt", "Stanley Tucci"}, 4, 15, 20},
-        {5, "About Time", "Richard Curtis", "2013", {"Domhnall Gleeson", "Rachel McAdams", "Bill Nighy", "Margot Robbie"}, 4, 12, 20},
-        {6, "Begin Again", "John Carney", "2013", {"Keira Knightley", "Mark Ruffalo", "Adam Levine", "Hailee Steinfeld"}, 4, 12, 20},
-        {7, "La La Land", "Damien Chazelle", "2016", {"Ryan Gosling", "Emma Stone", "John Legend", "Rosemarie DeWitt"}, 4, 12, 20},
-        {8,"Resident Evil", "Paul Anderson", "2002", {"Milla Jovovich", "Michelle Rodriguez", "Ryan McCluskey", "Oscar Pearce"}, 4, 19, 20}
+        {1, "Avatar", "James Cameron", "2009", {"Sam Worthington", "Zoe Saldana", "Sigourney Weaver", "Stephen Lang"}, 4, 12,20,{{0,0,0,0},{0,0,0,0},{0,0,0,0},{0,0,0,0}}},
+        {2, "Transformers", "Michael Bay", "2007", {"Shia LaBeouf", "Megan Fox", "Josh Duhamel", "Tyrese Gibson"}, 4, 12,20,{{0,0,0,0},{0,0,0,0},{0,0,0,0},{0,0,0,0}}},
+        {3, "Avengers", "Joss Whedon", "2012", {"Robert Downey Jr.", "Chris Evans", "Mark Ruffalo", "Chris Hemsworth"}, 4, 12,20,{{0,0,0,0},{0,0,0,0},{0,0,0,0},{0,0,0,0}}},
+        {4, "The Devil Wears Prada", "David Frankel", "2006", {"Meryl Streep", "Anne Hathaway", "Emily Blunt", "Stanley Tucci"}, 4, 15,20,{{0,0,0,0},{0,0,0,0},{0,0,0,0},{0,0,0,0}}},
+        {5, "About Time", "Richard Curtis", "2013", {"Domhnall Gleeson", "Rachel McAdams", "Bill Nighy", "Margot Robbie"}, 4, 12,20,{{0,0,0,0},{0,0,0,0},{0,0,0,0},{0,0,0,0}}},
+        {6, "Begin Again", "John Carney", "2013", {"Keira Knightley", "Mark Ruffalo", "Adam Levine", "Hailee Steinfeld"}, 4, 12,20,{{0,0,0,0},{0,0,0,0},{0,0,0,0},{0,0,0,0}}},
+        {7, "La La Land", "Damien Chazelle", "2016", {"Ryan Gosling", "Emma Stone", "John Legend", "Rosemarie DeWitt"}, 4, 12,20,{{0,0,0,0},{0,0,0,0},{0,0,0,0},{0,0,0,0}}},
+        {8,"Resident Evil", "Paul Anderson", "2002", {"Milla Jovovich", "Michelle Rodriguez", "Ryan McCluskey", "Oscar Pearce"}, 4, 19,20,{{0,0,0,0},{0,0,0,0},{0,0,0,0},{0,0,0,0}}}
     };
     int num_movies = sizeof(movies) / sizeof(movies[0]);
+
     
+    FILE *fp = fopen("movie_db", "wb+");
+    fwrite(movies, num_movies * sizeof(Movie), 1, fp);
+    fclose(fp);
+    fp = fopen("movie_db", "rb+");
+
+    //fseek(fp, (n-1)*sizeof(Movie),SEEK_SET);
+    //fwrite(movies[n-1], sizeof(Movie), 1, fp);
+    // fread(movies2, num_movies * sizeof(Movie), 1, fp);
+    // for (int i=0;i<num_movies;i++)
+    // {
+    //     printf("%d %s %s\n", movies2[i].index, movies2[i].title, movies2[i].director);
+    // }
+
+
     // 서버 소켓 생성
     if ((server_fd = socket(AF_UNIX, SOCK_STREAM, 0)) == 0) {
         perror("socket failed");
@@ -230,18 +271,16 @@ int main() {
 
     int num_clients = 0;
 
-    //좌석 초기화
-    init_seat_status();
     //현재 좌석 상황 받고 출력하기
-    printf("Seat Status:\n");
-    for (int i = 0; i < NUM_ROWS; i++) {
-        for (int j = 0; j < NUM_COLS; j++) {
-            // read(sock, &seat_status[i][j], sizeof(seat_status[i][j]));//12
-            printf("[%c] ", seat_status[i][j]);
-        }
-        printf("\n");
-    }
-    printf("\n");
+    // printf("Seat Status:\n");
+    // for (int i = 0; i < NUM_ROWS; i++) {
+    //     for (int j = 0; j < NUM_COLS; j++) {
+    //         // read(sock, &seat_status[i][j], sizeof(seat_status[i][j]));//12
+    //         printf("[%d] ", movies[movie_index].seat_status[i][j]);
+    //     }
+    //     printf("\n");
+    // }
+    // printf("\n");
 
     // 다중 클라이언트 처리
     while (1) {
@@ -266,7 +305,7 @@ int main() {
 
         if (pid == 0) {
             // 자식 프로세스에서 클라이언트 처리
-            handle_client(client_socket, movies, num_movies);
+            handle_client(client_socket, fp, num_movies);
 
             // 자식 프로세스 종료
             exit(EXIT_SUCCESS);

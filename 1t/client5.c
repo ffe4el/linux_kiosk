@@ -12,8 +12,6 @@
 #define NUM_ROWS 4
 #define NUM_COLS 5
 
-char seat_status[NUM_ROWS][NUM_COLS];
-
 typedef struct {
     int index;
     char title[50];
@@ -23,6 +21,7 @@ typedef struct {
     int num_cast_members;
     int minimum_age;
     int last_ticket; //남은 티켓 개수
+    int seat_status[NUM_ROWS][NUM_COLS];
 } Movie;
 
 
@@ -81,7 +80,36 @@ int main() {
         // 소켓 닫기
     	close(sock);
     }
-    else if(choose==1){
+
+    //관리자모드
+    int pwd=0;
+    else if (choose==4){
+        scanf("%d", &pwd);
+        write(sock, &pwd, sizeof(pwd));//비번 보내기
+        if(pwd==1234){
+            printf("welcom! manager~");//관리자모드로 들어오기 성공
+            int chose=0;
+            printf("1. add movie\n2. add food\n");
+            scanf("%d", &chose);
+            write(sock, &chose, sizeof(chose));//선택 보내기
+            if(chose==1){
+                Movie movies = {}
+                fwrite();
+            }
+            else if(chose==2){
+
+            }
+
+
+
+        }
+        else{
+            close(sock);
+        }
+        
+    }
+
+    else if (choose==1){
         // 영화목록 보여주기
         printf("Movie List~!\n");
         for (int i = 0; i < num_movies; i++) {
@@ -169,8 +197,8 @@ int main() {
                     printf("Seat Status:\n");
                     for (int i = 0; i < NUM_ROWS; i++) {
                         for (int j = 0; j < NUM_COLS; j++) {
-                            read(sock, &seat_status[i][j], sizeof(seat_status[i][j]));//12
-                            printf("[%c] ", seat_status[i][j]);
+                            read(sock, &movies[movie_index].seat_status[i][j], sizeof(movies[movie_index].seat_status[i][j]));//12
+                            printf("[%d] ", movies[movie_index].seat_status[i][j]);
                         }
                         printf("\n");
                     }
@@ -187,26 +215,27 @@ int main() {
                     read(sock, &result, sizeof(result));//15. 좌석 유효 검사 받기, 좌석 선점하기
                     if (result) {
                         printf("Seat selected: %d행 %d열\n", row, col);
-                        write(sock, "Seat selection successful", strlen("Seat selection successful") + 1);//16
+                        printf("Seat selection successful\n");
                         //현재 상태 보여주기
                         printf("Seat Status:\n");
                         for (int i = 0; i < NUM_ROWS; i++) {
                             for (int j = 0; j < NUM_COLS; j++) {
-                                read(sock, &seat_status[i][j], sizeof(seat_status[i][j]));//12
-                                printf("[%c] ", seat_status[i][j]);
+                                read(sock, &movies[movie_index].seat_status[i][j], sizeof(movies[movie_index].seat_status[i][j]));
+                                printf("[%d] ", movies[movie_index].seat_status[i][j]);
                             }
                             printf("\n");
                         }
                         printf("\n");
+                        printf("Thank you for your purchase! Please enjoy your time~");
                         break;
                     } else {
                         printf("Seat selection failed: %d행 %d열\n", row, col);
-                        write(sock, "Seat selection failed", strlen("Seat selection failed") + 1);//17
                         continue;
                     }
 
                 }
             }
+            break;
         }
     }
     // 소켓 닫기
