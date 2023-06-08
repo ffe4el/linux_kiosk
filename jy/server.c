@@ -14,13 +14,12 @@ typedef struct {
    char name[MAX];
    int price;
    int quantity;
-   } Food;
+} Food;
    
-   int food_client(int connfd, FILE *fp, int listSize) {
+int food_client(int connfd, FILE *fp, int listSize) {
    int price_sum = 0, TodayTotalPrice = 0;
    int idx, i, n, input_index, input_quantity;
    Food *foods = (Food*)malloc(listSize * sizeof(Food));
-   
    
    while(1){
       fseek(fp, 0, SEEK_SET);
@@ -30,7 +29,6 @@ typedef struct {
       for(int i=0 ; i<listSize ; i++) {
          write(connfd, &foods[i], sizeof(foods[i]));//2
       }
-      
       
       read(connfd, &input_index, sizeof(int)); // 3
       if(input_index == 0) break;
@@ -54,26 +52,26 @@ typedef struct {
       fwrite(&foods[input_index-1], sizeof(Food), 1, fp);
       
       for (int i = 0; i < listSize; i++)
-         {
-               printf("[%d] ", i+1);
-                printf("%s %d %d\n", foods[i].name, foods[i].price,                foods[i].quantity);
-         }
+      {
+         printf("[%d] ", i+1);
+         printf("%s %d %d\n", foods[i].name, foods[i].price, foods[i].quantity);
       }
-      
-      int save_sum;
-      read(connfd, &save_sum, sizeof(int));
-      printf("%d원이 계산되었습니다.\n", save_sum);
-     
- 
-         close(connfd);
-         exit (0);
-   
    }
+      
+   int save_sum;
+   read(connfd, &save_sum, sizeof(int));
+   printf("%d원이 계산되었습니다.\n", save_sum);
+   
+
+      close(connfd);
+      exit (0);
+   
+}
    
 
   
- int main ()
- {
+int main ()
+{
    int listenfd, connfd, clientlen, price_sum = 0, TodayTotalPrice = 0;
    char inmsg[MAXLINE], outmsg[MAXLINE];
    int idx, i, n, input_index, input_quantity;
@@ -85,18 +83,18 @@ typedef struct {
    fwrite(foodlist, listSize * sizeof(Food), 1, fp);
    fclose(fp);
    fp = fopen("food_db", "rb+");
-   
+
    printf("음식 관리 서버 Start!\n");
    printf("등록된 음식 메뉴\n");
-    
+      
    //record = (struct locker *) malloc(n * sizeof(struct locker));
 
    //printf("Set %d lockers.\n", n);
    //printf("%-4s %-9s %-8s %-4s\n", "Index", "ID", "Name", "Thing(x means blank)");
    for (int i = 0; i < listSize; i++)
    {
-       printf("[%d] ", i+1);
-        printf("%s %d %d\n", foodlist[i].name, foodlist[i].price, foodlist[i].quantity);
+         printf("[%d] ", i+1);
+         printf("%s %d %d\n", foodlist[i].name, foodlist[i].price, foodlist[i].quantity);
    }
 
    signal(SIGCHLD, SIG_IGN);
@@ -116,4 +114,4 @@ typedef struct {
          food_client(connfd, fp, listSize);
       } else close(connfd);
    }
- }
+}

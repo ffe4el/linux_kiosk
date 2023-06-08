@@ -11,6 +11,8 @@
 #define MAX_MOVIES 10
 #define NUM_ROWS 4
 #define NUM_COLS 5
+#define MAXLINE 100
+#define MAX 1024
 
 typedef struct {
     int index;
@@ -24,6 +26,11 @@ typedef struct {
     int seat_status[NUM_ROWS][NUM_COLS];
 } Movie;
 
+typedef struct {
+   char name[MAX];
+   int price;
+   int quantity;
+} Food;  
 
 int main() {
     int sock = 0, valread;
@@ -32,7 +39,6 @@ int main() {
     char welcome_message[BUFFER_SIZE] = {0};
     int num_movies;
     char movie_list[BUFFER_SIZE] = {0};
-    int pwd=0;
 
 
     // 클라이언트 소켓 생성
@@ -59,27 +65,28 @@ int main() {
 
     // 2. receive num_movies
     read(sock, &num_movies, sizeof(num_movies));
-    printf("num_movies : %d\n", num_movies);
+    printf("Now in theaters : %d\n", num_movies);
     
     // 3. receive struct movie_list 
     Movie movies[MAX_MOVIES] = {0};
     for(int i=0; i<num_movies; i++){
 	    read(sock, &movies[i], sizeof(movies[i]));
     }
-    // printf("")
 
     
-    printf("Enter a number 1. movie or 2. food? (or 3. quit): ");
+    printf("Enter a number 1 to buy movie ticket and food~!  => ");
     int choose;
     scanf("%d", &choose); //movie or food 입력
-    printf("%d", choose);
+    // printf("%d", choose);
     // 4. choose 메세지 전달
     write(sock, &choose, sizeof(choose));
 
-    // 종료 명령 확인
-    if (choose==3){
-        // 소켓 닫기
-    	close(sock);
+    //관리자모드
+    if (choose==4){
+        int pwd;
+        int listSize;
+        scanf("%d", &pwd);
+        write(sock, &pwd, sizeof(pwd));//비번 보내기
     }
 
     else if (choose==1){
@@ -91,10 +98,9 @@ int main() {
                 printf("- %s\n", movies[i].cast[j]);
             }
             printf("\n");
-            printf("\n");
         }
 
-        printf("0-13 : 8000won\n14-18 : 12000won\n19-64 : 15000won\nover 64 : 8000won\n");
+        printf("0-13 : 8000won\n14-18 : 12000won\n19-64 : 15000won\nover 64 : 8000won\n\n");
 
 
         int adult =1;
@@ -138,6 +144,7 @@ int main() {
             // 10,11. 나이 입력 받기
             int ticket_price=0;
             int age;
+            adult =1;
             for(int i=0; i<num_people; i++){
                 printf("Enter age!(one by one plz)\n");
                 scanf("%d", &age);
@@ -189,8 +196,8 @@ int main() {
                     if (result) {
                         printf("Seat selected: %d행 %d열\n", row, col);
                         printf("Seat selection successful\n");
-                        //현재 상태 보여주기
-                        printf("Seat Status:\n");
+                        // 현재 상태 보여주기
+                        printf("\nSeat Status:\n");
                         for (int i = 0; i < NUM_ROWS; i++) {
                             for (int j = 0; j < NUM_COLS; j++) {
                                 read(sock, &movies[movie_index].seat_status[i][j], sizeof(movies[movie_index].seat_status[i][j]));
@@ -199,7 +206,8 @@ int main() {
                             printf("\n");
                         }
                         printf("\n");
-                        printf("Thank you for your purchase! Please enjoy your time~");
+                        printf("Thank you for your 💵purchase💵! Please enjoy your time~\n\n");
+                        printf("------------------------------------------------------------\n");
                         break;
                     } else {
                         printf("Seat selection failed: %d행 %d열\n", row, col);
@@ -210,6 +218,97 @@ int main() {
             }
             break;
         }
+        // 푸드
+        char Sendlist[MAX] = {0};
+        int result, idx, input_index, last_quantity, listSize, price_sum, money = 0;
+        while(1){  
+            printf("\n🍿The Theater Food court🍿\n");
+            printf("※ 0을 기입하시면 계산 메뉴로 이동 ※\n");
+            
+            //1. 음식 갯수 받기
+            read(sock, &listSize, sizeof(listSize));//1
+            Food foods[MAXLINE] = {0};
+
+            //2. 음식 리스트 받기
+            for(int i = 0 ; i < listSize ; i++){
+                read(sock, &foods[i], sizeof(foods[i]));//2
+            }
+            
+            //음식 리스트 출력하기
+            for(int i = 0 ; i < listSize ; i++){
+                printf("[%d] ", i+1);
+                printf("%s %d %d\n", foods[i].name, foods[i].price, foods[i].quantity);
+
+            }
+            
+            //계산하기
+            if(price_sum > 0) printf("현재 계산하실 금액은 %d원 입니다.\n", price_sum);
+
+            //3. 음식 고르기
+            while(1){ // 인덱스 기입창
+                printf("원하는 음식의 인덱스를 기입해주세요. : ");
+                scanf("%d", &input_index);
+                if(input_index > listSize || input_index  < 0){
+                    printf("잘못된 인덱스입니다. 다시 입력해주세요.\n");
+                    continue;
+                }
+                else break;
+            }
+            write(sock, &input_index, sizeof(int)); // 3
+            if(input_index == 0) break;
+            
+            //4.남은 음식 갯수 받기
+            read(sock, &last_quantity, sizeof(int)); // 4
+                
+
+            int input_quantity;
+            while(1){
+                printf("구매하실 음식의 수량을 입력해주세요 : ");
+                scanf("%d", &input_quantity);
+                if(last_quantity - input_quantity < 0 || input_quantity < 1){
+                    printf("구매할 수 없는 수량이 입력되었습니다. 다시 입력해주세요.\n");
+                    continue;
+                }
+                else{
+                    //5. 구매할 음식 수량 보내기
+                    write(sock, &input_quantity, sizeof(int)); // 5
+                    //6. 가격받기
+                    read(sock, &price_sum, sizeof(int)); // 6 가격 받기
+                    read(sock, &money, sizeof(money)); //6-1. 영화 가격 받기
+                    break;
+                }
+            }       
+        }
+        if(price_sum == 0){
+            printf("계산 할 수 없습니다. 프로그램을 종료합니다.");
+            exit(0);
+        }
+
+        int save_sum = price_sum;
+        int total_price = price_sum+money;
+        printf("음식 금액 : %d  영화티켓 금액 : %d  입니다.\n", price_sum, money);
+        while(1){
+            printf("총 계산하실 금액은 %d입니다.\n 계산하실 금액을 지불해주세요:", total_price);
+            int input_price;
+            scanf("%d", &input_price);
+            if(input_price <= 0){
+                printf("지불할 수 없는 금액입니다.\n");
+                continue;
+            }
+            total_price -= input_price;
+            if(total_price > 0){
+                printf("%d 원 지불이 확인되었습니다.\n", input_price); 
+                printf("남은 ");
+                continue;
+            }
+            else if(total_price == 0) {
+                printf("계산이 완료되었습니다. 구매해주셔서 감사합니다!\n");
+                //7. 총 결제 금액 보내기
+                write(sock, &save_sum, sizeof(int));
+                break;
+            }
+        }
+
     }
     // 소켓 닫기
     close(sock);
