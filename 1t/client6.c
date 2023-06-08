@@ -77,19 +77,18 @@ int main() {
     printf("Enter a number 1 to buy movie ticket and food~!  => ");
     int choose;
     scanf("%d", &choose); //movie or food 입력
-    // printf("%d", choose);
     // 4. choose 메세지 전달
     write(sock, &choose, sizeof(choose));
 
     //관리자모드
-    if (choose==4){
-        int pwd;
-        int listSize;
-        scanf("%d", &pwd);
-        write(sock, &pwd, sizeof(pwd));//비번 보내기
-    }
+    // if (choose==4){
+    //     int pwd;
+    //     int listSize;
+    //     scanf("%d", &pwd);
+    //     write(sock, &pwd, sizeof(pwd));//비번 보내기
+    // }
 
-    else if (choose==1){
+    if (choose==1){
         // 영화목록 보여주기
         printf("Movie List~!\n");
         for (int i = 0; i < num_movies; i++) {

@@ -18,10 +18,10 @@
 #define MAX 1024
 #define FIXED_QUANTITY 30
 
-typedef struct{
-    int money;
-    int listSize;
-}returnn;
+// typedef struct{
+//     int money;
+//     int listSize;
+// }returnn;
 
 typedef struct {
     int index;
@@ -42,16 +42,14 @@ typedef struct {
 } Food;
 
 // 클라이언트와의 통신
-returnn handle_client(int client_socket, FILE *fp, int num_movies, FILE *fp1, int listSize) {
+int handle_client(int client_socket, FILE *fp, int num_movies) {
     char buffer[BUFFER_SIZE];
     char *welcome_message = "🎀----------------------------------🎀\n|                                    |\n|  Welcome to the Theater🎬🍿 Kiosk! | \n|                                    |\n🎀----------------------------------🎀";
     int valread;
     int num_people;
     int ticket_price=0;
     
-    returnn p;
     Movie *movies = (Movie *)malloc(num_movies * sizeof(Movie));
-    Food *foods = (Food*)malloc(listSize * sizeof(Food));
 
     // 1. 클라이언트에게 환영 메시지 전송
     write(client_socket, welcome_message, strlen(welcome_message));
@@ -61,10 +59,6 @@ returnn handle_client(int client_socket, FILE *fp, int num_movies, FILE *fp1, in
     fseek(fp, 0, SEEK_SET);
     fread(movies, sizeof(Movie), num_movies, fp);
     write(client_socket, &num_movies, sizeof(num_movies));
-
-    // 음식 리스트 가져오기
-    fseek(fp1, 0, SEEK_SET);
-    fread(foods, sizeof(Food), listSize, fp1);
     
     // 3. send struct movie_list
     for(int i=0; i<num_movies;i++){
@@ -77,33 +71,33 @@ returnn handle_client(int client_socket, FILE *fp, int num_movies, FILE *fp1, in
     printf("Client: %d\n", choose);
 
     //관리자모드
-    if (choose==4){
-        int pwd=0;
-        read(client_socket, &pwd, sizeof(pwd));//비번 받기
-        if(pwd==1234){
-            printf("welcom! manager~\n");//관리자모드로 들어오기 성공
-            printf("you can set food list\n");
-            fseek(fp1,0,SEEK_SET);//파일위치 맨앞으로
-            int num;
-            printf("Set the number of food => ");
-            scanf("%d", &num);
-            for(int i=0; i<num; i++){
-                printf("  Name    Price   Quantity\n");
-                scanf("%s %d %d", foods[listSize+1].name, &foods[listSize+1].price, &foods[listSize+1].quantity);
-            }
-            listSize = num;
-            p.listSize = listSize;
-            fwrite(foods, p.listSize * sizeof(Food), 1, fp1);
-            printf("Addition is complete! good bye\n");
-            fclose(fp1);
-            close(client_socket);
-        }
-        else{ //비번이 틀리면 바로 종료
-            close(client_socket);
-        }
-    }
+    // if (choose==4){
+        // int pwd=0;
+        // read(client_socket, &pwd, sizeof(pwd));//비번 받기
+        // if(pwd==1234){
+        //     printf("welcom! manager~\n");//관리자모드로 들어오기 성공
+        //     printf("you can set food list\n");
+        //     fseek(fp1,0,SEEK_SET);//파일위치 맨앞으로
+        //     int num;
+        //     printf("Set the number of food => ");
+        //     scanf("%d", &num);
+        //     for(int i=0; i<num; i++){
+        //         printf("  Name    Price   Quantity\n");
+        //         scanf("%s %d %d", foods[listSize+1].name, &foods[listSize+1].price, &foods[listSize+1].quantity);
+        //     }
+        //     listSize = num;
+        //     p.listSize = listSize;
+        //     fwrite(foods, p.listSize * sizeof(Food), 1, fp1);
+        //     printf("Addition is complete! good bye\n");
+        //     fclose(fp1);
+        //     close(client_socket);
+        // }
+        // else{ //비번이 틀리면 바로 종료
+        //     close(client_socket);
+        // }
+    // }
 
-    else if(choose==1){
+    if(choose==1){
         int adult =1;
         int row, col;
         while(1){
@@ -190,7 +184,7 @@ returnn handle_client(int client_socket, FILE *fp, int num_movies, FILE *fp1, in
                         }
                         break;
                     } else {
-                        printf("Seat selection failed: %d행 %d열\n", row, col);
+                        printf("Seat selection failed: %d행 %d열\n", row+1, col+1);
                         continue;
                     }
                 }
@@ -202,13 +196,11 @@ returnn handle_client(int client_socket, FILE *fp, int num_movies, FILE *fp1, in
     }
     // 클라이언트 소켓 닫기
     free(movies);
-    free(foods);
-    p.money = ticket_price;
-    return p;
+    return ticket_price;
 }
 
 
-int food_client(int client_socket, FILE *fp1, int listSize, int money) {
+int food_client(int client_socket, FILE *fp1, int listSize,int money) {
    int price_sum = 0, TodayTotalPrice = 0;
    int idx, i, n, input_index, input_quantity;
    Food *foods = (Food*)malloc(listSize * sizeof(Food));
@@ -307,14 +299,41 @@ int main() {
     int manage;
     printf("choose~! 1 : kiosk mode, 2: manager mode\n");
     scanf("%d", &manage);
-    if(manage == 2){ //관리자 모드
-        
+    while(1){
+        if(manage == 2){ //관리자 모드
+            FILE *fp1 = fopen("food_db", "wb+");
+            int pwd=0;
+            printf("Enter the Password => ");
+            scanf("%d", &pwd);
+            if(pwd==1234){
+                printf("welcom! manager~\n");//관리자모드로 들어오기 성공
+                printf("you can set food list\n");
+                fseek(fp1,0,SEEK_SET);//파일위치 맨앞으로
+                int num;
+                printf("Set the number of food => ");
+                scanf("%d", &num);
+                for(int i=0; i<num; i++){
+                    printf("  Name    Price   Quantity\n");
+                    scanf("%s %d %d", foodlist[i].name, &foodlist[i].price, &foodlist[i].quantity);
+                }
+                listSize = num; //리스트 사이즈 업데이트!
+                fwrite(foodlist, listSize * sizeof(Food), 1, fp1);
+                printf("Addition is complete!\n");
+                fclose(fp1);
+                fp1 = fopen("food_db", "rb+");
+                printf("now ready to pair.\n");
+                break;
+            }
+            else{ //비번이 틀리면 다시 비번 적을 수 있도록
+                continue;
+            }
+            break;
+        }
+        else if(manage == 1){  //판매 모드
+            break;
+        }
     }
-    else if(manage == 1){  //판매 모드
-
-    }
-
-
+    
     // 서버 소켓 생성
     if ((server_fd = socket(AF_UNIX, SOCK_STREAM, 0)) == 0) {
         perror("socket failed");
@@ -364,11 +383,10 @@ int main() {
         }
 
         if (pid == 0) {
-            returnn q;
             // 자식 프로세스에서 클라이언트 처리
-            q = handle_client(client_socket, fp, num_movies, fp1, listSize);
-            // fp1 = fopen("food_db", "rb+");
-            food_client(client_socket, fp1, q.listSize, q.money);
+            int money = handle_client(client_socket, fp, num_movies);
+
+            food_client(client_socket, fp1, listSize, money);
 
             // 자식 프로세스 종료
             exit(EXIT_SUCCESS);
