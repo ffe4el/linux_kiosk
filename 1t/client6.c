@@ -209,7 +209,7 @@ int main() {
                         printf("------------------------------------------------------------\n");
                         break;
                     } else {
-                        printf("Seat selection failed: %d행 %d열\n", row, col);
+                        printf("Seat selection failed❌ : %d행 %d열\nPlz enter another seat!\n\n", row, col);
                         continue;
                     }
 

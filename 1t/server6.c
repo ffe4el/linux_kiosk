@@ -164,16 +164,20 @@ int handle_client(int client_socket, FILE *fp, int num_movies) {
                     //좌석이 유효한지 검사
                     if (row < 0 || row >= NUM_ROWS || col < 0 || col >= NUM_COLS) {
                         seat_selection_result = 0; // 좌석이 유효하지 않음
+                        printf("안뇽\n");
                     }
-                    if (movies[movie_index].seat_status[row][col] == 1) {
+                    else{
+                        if (movies[movie_index].seat_status[row][col] == 1) {
                         seat_selection_result = 0; // 이미 예약된 좌석
+                        }
+                        else if(movies[movie_index].seat_status[row][col] == 0){
+                            movies[movie_index].seat_status[row][col] = 1; // 좌석 예약
+                            seat_selection_result = 1;
+                        }
                     }
-                    else if(movies[movie_index].seat_status[row][col] == 0){
-                        movies[movie_index].seat_status[row][col] = 1; // 좌석 예약
-                        seat_selection_result = 1;
-                    }
+                    
                     write(client_socket, &seat_selection_result, sizeof(seat_selection_result));//15
-                    if (seat_selection_result) {
+                    if (seat_selection_result==1) {
                         printf("Seat selected: %d행 %d열\n", row, col);
                         // 현재 상태 보여주기
                         printf("Seat Status:\n");
@@ -184,7 +188,7 @@ int handle_client(int client_socket, FILE *fp, int num_movies) {
                         }
                         break;
                     } else {
-                        printf("Seat selection failed: %d행 %d열\n", row+1, col+1);
+                        printf("Seat selection failed : %d행 %d열\n", row+1, col+1);
                         continue;
                     }
                 }
