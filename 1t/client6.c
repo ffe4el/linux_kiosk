@@ -140,7 +140,7 @@ int main() {
                 }
             }
 
-            // 10,11. 나이 입력 받기
+            // 10. 나이 입력 받기
             int ticket_price=0;
             int age;
             adult =1;
@@ -166,7 +166,8 @@ int main() {
             if (adult == 0){
                 continue;
             }
-            write(sock, &ticket_price, sizeof(ticket_price)); //11
+            // 11. 총 가격 보내기
+            write(sock, &ticket_price, sizeof(ticket_price));
             printf("Total price : %d\n", ticket_price);
 
             //12. 좌석 선택하기
