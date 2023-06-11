@@ -291,8 +291,8 @@ int main() {
         }
    
    //합산 금액 계산해서 한꺼번에 계산할 준비
-        int save_sum = price_sum;
         int total_price = price_sum+money;
+        int save_sum = total_price;
         printf("Chosen food price : %d  Movieticket Price : %d\n", price_sum, money);
         printf("The total ");
         while(1){

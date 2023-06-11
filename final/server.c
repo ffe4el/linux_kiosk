@@ -221,9 +221,9 @@ int food_client(int client_socket, FILE *fp1, int listSize,int money) {
     }
     
     //7. 총 결제 금액 받기
-    int save_sum;
-    read(client_socket, &save_sum, sizeof(int));
-    printf("%dwon has been paid!\n", save_sum);
+    int total_price;
+    read(client_socket, &total_price, sizeof(int));
+    printf("%dwon has been paid!\n", total_price);
    
     free(foods);
     close(client_socket);
