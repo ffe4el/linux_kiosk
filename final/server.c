@@ -18,10 +18,6 @@
 #define MAX 1024
 #define FIXED_QUANTITY 30
 
-// typedef struct{
-//     int money;
-//     int listSize;
-// }returnn;
 
 typedef struct {
     int index;
@@ -69,33 +65,6 @@ int handle_client(int client_socket, FILE *fp, int num_movies) {
     int choose;
     valread = read(client_socket, &choose, sizeof(choose));
     printf("Client: %d\n", choose);
-
-    //관리자모드
-    // if (choose==4){
-        // int pwd=0;
-        // read(client_socket, &pwd, sizeof(pwd));//비번 받기
-        // if(pwd==1234){
-        //     printf("welcom! manager~\n");//관리자모드로 들어오기 성공
-        //     printf("you can set food list\n");
-        //     fseek(fp1,0,SEEK_SET);//파일위치 맨앞으로
-        //     int num;
-        //     printf("Set the number of food => ");
-        //     scanf("%d", &num);
-        //     for(int i=0; i<num; i++){
-        //         printf("  Name    Price   Quantity\n");
-        //         scanf("%s %d %d", foods[listSize+1].name, &foods[listSize+1].price, &foods[listSize+1].quantity);
-        //     }
-        //     listSize = num;
-        //     p.listSize = listSize;
-        //     fwrite(foods, p.listSize * sizeof(Food), 1, fp1);
-        //     printf("Addition is complete! good bye\n");
-        //     fclose(fp1);
-        //     close(client_socket);
-        // }
-        // else{ //비번이 틀리면 바로 종료
-        //     close(client_socket);
-        // }
-    // }
 
     if(choose==1){
         int adult =1;
@@ -164,7 +133,6 @@ int handle_client(int client_socket, FILE *fp, int num_movies) {
                     //좌석이 유효한지 검사
                     if (row < 0 || row >= NUM_ROWS || col < 0 || col >= NUM_COLS) {
                         seat_selection_result = 0; // 좌석이 유효하지 않음
-                        //printf("안뇽\n");
                     }
                     else{
                         if (movies[movie_index].seat_status[row][col] == 1) {
@@ -263,6 +231,12 @@ int food_client(int client_socket, FILE *fp1, int listSize,int money) {
    
 }
 
+int alarm_triggered = 0; // 알람 트리거 설정
+/* 설정해놓은 시간이 끝나면 안내문 출력 후 강제 종료 */
+void handle_alarm(int sig) {
+   printf("Time is over. The connection has been terminated.\n");
+   alarm_triggered = 1;
+   } 
 
 
 int main() {
@@ -271,7 +245,8 @@ int main() {
     int addrlen = sizeof(address);
     char buffer[BUFFER_SIZE] = {0};
     printf("Server Start!\n");
-
+    
+    
     // 영화 ---------------------------------------------------------
     // 영화 목록 초기화
     Movie movies[] = {
@@ -298,6 +273,7 @@ int main() {
     fwrite(foodlist, listSize * sizeof(Food), 1, fp1);
     fclose(fp1);
     fp1 = fopen("food_db", "rb+");
+
 
     //관리자모드 들어갈지 말지...
     int manage;
@@ -387,6 +363,8 @@ int main() {
         }
 
         if (pid == 0) {
+            signal(SIGALRM, handle_alarm);
+            alarm(120); // 원하는 시간 설정
             // 자식 프로세스에서 클라이언트 처리
             int money = handle_client(client_socket, fp, num_movies);
 
@@ -394,6 +372,8 @@ int main() {
 
             // 자식 프로세스 종료
             exit(EXIT_SUCCESS);
+            
+            while(!alarm_triggered) {}
         } else {
             // 부모 프로세스는 클라이언트 연결 대기를 위해 계속 진행
             close(client_socket);

@@ -3,6 +3,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <sys/socket.h>
+#include <signal.h>
 #include <sys/un.h>
 
 #define SOCKET_PATH "movie_kiosk_socket"
@@ -26,12 +27,19 @@ typedef struct {
     int seat_status[NUM_ROWS][NUM_COLS];
 } Movie;
 
+
 typedef struct {
    char name[MAX];
    int price;
    int quantity;
 } Food;  
 
+/* 설정해놓은 시간이 끝나면 안내문 출력 후 강제 종료 */
+void handle_alarm(int sig) {
+   printf("\nTime is over. The connection has been terminated.\n");
+   exit(0);
+   }
+   
 int main() {
     int sock = 0, valread;
     struct sockaddr_un serv_addr;
@@ -39,8 +47,8 @@ int main() {
     char welcome_message[BUFFER_SIZE] = {0};
     int num_movies;
     char movie_list[BUFFER_SIZE] = {0};
-
-
+    int alarm_triggered = 0;
+       
     // 클라이언트 소켓 생성
     if ((sock = socket(AF_UNIX, SOCK_STREAM, 0)) < 0) {
         printf("\n Socket creation error\n");
@@ -56,8 +64,11 @@ int main() {
         printf("\nConnection Failed\n");
         return -1;
     }
-//------------------------------------------------------------------------------------------
-
+//----서버와 연결 후 작동-------------------------------------------------------------------------
+   
+    signal (SIGALRM, handle_alarm);
+    alarm(120); // 원하는 시간 설정 대신 서버와 같은 시간이여야함
+    
     // 1. 서버로부터 환영 메시지 수신
     valread = read(sock, welcome_message, sizeof(welcome_message) - 1); // 수정: read의 길이 인자 수정
     //welcome_message[valread] = '\0'; // 널 문자 추가
@@ -79,14 +90,6 @@ int main() {
     scanf("%d", &choose); //movie or food 입력
     // 4. choose 메세지 전달
     write(sock, &choose, sizeof(choose));
-
-    //관리자모드
-    // if (choose==4){
-    //     int pwd;
-    //     int listSize;
-    //     scanf("%d", &pwd);
-    //     write(sock, &pwd, sizeof(pwd));//비번 보내기
-    // }
 
     if (choose==1){
         // 영화목록 보여주기
@@ -134,7 +137,7 @@ int main() {
                     break;
                 }
                 else{
-                    //구매가능개수를 초과하면 다시 입력할 수 있도록..
+                    //구매 가능개수를 초과하면 다시 입력할 수 있도록..
                     printf("You have exceeded the number of available ticket.");
                     continue;
                 }
@@ -217,6 +220,7 @@ int main() {
             }
             break;
         }
+        
         // 푸드
         char Sendlist[MAX] = {0};
         int result, idx, input_index, last_quantity, listSize, price_sum, money = 0;
@@ -257,10 +261,10 @@ int main() {
             write(sock, &input_index, sizeof(int)); // 3
             if(input_index == 0) break;
             
-            //4.남은 음식 갯수 받기
+            //4. 입력된 인덱스의 남은 음식 갯수 받기
             read(sock, &last_quantity, sizeof(int)); // 4
                 
-
+       //수량 계산
             int input_quantity;
             while(1){
                 printf("Please write down the amount of food you want to buy. : ");
@@ -285,7 +289,8 @@ int main() {
             printf("The amount cannot be calculated. Exit the program.");
             exit(0);
         }
-
+   
+   //합산 금액 계산해서 한꺼번에 계산할 준비
         int save_sum = price_sum;
         int total_price = price_sum+money;
         printf("Chosen food price : %d  Movieticket Price : %d\n", price_sum, money);
@@ -313,7 +318,10 @@ int main() {
         }
 
     }
+    
     // 소켓 닫기
     close(sock);
     return 0;
+    
+    while(!alarm_triggered) {} //알람이 끝날때까지 대기
 }

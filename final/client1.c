@@ -324,7 +324,7 @@ int main() {
 
     }
     close(sock);
-    while(!alarm_triggered) {} //알람이 끝날때까지 대기
     // 소켓 닫기
     return 0;
+    while(!alarm_triggered) {} //알람이 끝날때까지 대기
 }
