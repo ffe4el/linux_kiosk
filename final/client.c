@@ -74,21 +74,21 @@ int main() {
     //welcome_message[valread] = '\0'; // 널 문자 추가
     printf("%s\n", welcome_message);
 
-    // 2. receive num_movies
+    // 2. 영화 개수 받기
     read(sock, &num_movies, sizeof(num_movies));
     printf("Now in theaters : %d\n", num_movies);
     
-    // 3. receive struct movie_list 
+    // 3. 영화 목록 받기 
     Movie movies[MAX_MOVIES] = {0};
     for(int i=0; i<num_movies; i++){
        read(sock, &movies[i], sizeof(movies[i]));
     }
 
     
-    printf("Enter ""1"" to buy movie ticket and food~!  => ");
-    int choose;
-    scanf("%d", &choose); //movie or food 입력
+    printf("Enter 1 to buy movie ticket and food~!  => ");
     // 4. choose 메세지 전달
+    int choose;
+    scanf("%d", &choose); 
     write(sock, &choose, sizeof(choose));
 
     if (choose==1){
@@ -107,7 +107,7 @@ int main() {
 
         int adult =1;
         while(1){
-            // 6. 영화 제목 입력 받기
+            // 5. 영화 제목 입력 받고 보내기
             int movie_index1;
             printf("Enter movie🎬 number you see. => ");
             scanf("%d", &movie_index1); //영화 제목 입력받기
@@ -120,12 +120,12 @@ int main() {
                 continue;
             }
 
-            // 8. 서버에서 해당 영화의 남은 티켓수 받기
+            // 6. 서버에서 해당 영화의 남은 티켓수 받기
             int last_tk;
             read(sock, &last_tk, sizeof(last_tk));
             printf("Available ticket🎟️ : %d\n", last_tk);
 
-            // 9. 사람 수 입력받기
+            // 7. 사람 수 입력받고 보내기
             int num_people=0;
             while(1){
                 printf("Enter the number of seats you want to book:  => ");
@@ -143,7 +143,7 @@ int main() {
                 }
             }
 
-            // 10,11. 나이 입력 받기
+            // 8. 나이 입력 받고 보내기
             int ticket_price=0;
             int age;
             adult =1;
@@ -169,13 +169,14 @@ int main() {
             if (adult == 0){
                 continue;
             }
-            write(sock, &ticket_price, sizeof(ticket_price)); //11
+            // 9. 총 가격 보내기
+            write(sock, &ticket_price, sizeof(ticket_price)); 
             printf("Total price : %d\n", ticket_price);
 
-            //12. 좌석 선택하기
+            // 좌석 선택하기
             for(int i=0; i<num_people; i++){ //입력된 사람 수만큼 좌석 선택
                 while(1){
-                    //현재 좌석 상황 받고 출력하기
+                    // 10 .현재 좌석 상황 받고 출력하기
                     printf("Seat Status:\n");
                     for (int i = 0; i < NUM_ROWS; i++) {
                         for (int j = 0; j < NUM_COLS; j++) {
@@ -187,14 +188,15 @@ int main() {
                     printf("\n");
 
                     int row, col;
-                    //앉고 싶은 좌석 입력받기
+                    // 11. 앉고 싶은 좌석 입력받고 보내기
                     printf("Enter the row and column of the seat you want to select (e.g., 3 4): ");
                     scanf("%d %d", &row, &col);
-                    write(sock, &row, sizeof(row));//13
-                    write(sock, &col, sizeof(col));//14
+                    write(sock, &row, sizeof(row));
+                    write(sock, &col, sizeof(col));
 
+                    // 12. 좌석 유효 검사 받기, 좌석 선점하기
                     int result;
-                    read(sock, &result, sizeof(result));//15. 좌석 유효 검사 받기, 좌석 선점하기
+                    read(sock, &result, sizeof(result));
                     if (result) {
                         printf("Seat selected: [%d, %d]\n", row, col);
                         printf("Seat selection successful\n");

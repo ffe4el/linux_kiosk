@@ -51,12 +51,12 @@ int handle_client(int client_socket, FILE *fp, int num_movies) {
     write(client_socket, welcome_message, strlen(welcome_message));
     printf("Welcome message sent to the client\n");
 
-    // 2. send num_movies
+    // 2. 영화 개수 보내기
     fseek(fp, 0, SEEK_SET);
     fread(movies, sizeof(Movie), num_movies, fp);
     write(client_socket, &num_movies, sizeof(num_movies));
     
-    // 3. send struct movie_list
+    // 3. 영화 목록 보내기
     for(int i=0; i<num_movies;i++){
         write(client_socket, &movies[i], sizeof(movies[i]));
     }
@@ -70,19 +70,19 @@ int handle_client(int client_socket, FILE *fp, int num_movies) {
         int adult =1;
         int row, col;
         while(1){
-            // 6. 영화제목수신
+            // 5. 영화제목수신
             int movie_index1;
             read(client_socket, &movie_index1, sizeof(movie_index1));
             printf("Client: %d\n", movie_index1);
 
             int movie_index = movie_index1-1;
 
-            // 8. 해당 영화의 남은 티켓수 보내기
+            // 6. 해당 영화의 남은 티켓수 보내기
             int last_tk = movies[movie_index].last_ticket;
             write(client_socket, &last_tk, sizeof(last_tk));
             printf("Last ticket : %d\n", last_tk);
 
-            //9. 인원 수신
+            //7. 사람 수 받기
             while(1){
                 read(client_socket, &num_people, sizeof(num_people));
                 if(last_tk-num_people >= 0){
@@ -94,11 +94,11 @@ int handle_client(int client_socket, FILE *fp, int num_movies) {
                 }
             }
             
-            // 10,11. 나이 입력 받기
+            // 8. 나이 입력 받기
             adult=1;
             int age;
             for(int i=0; i<num_people; i++){
-                read(client_socket, &age, sizeof(age)); //10
+                read(client_socket, &age, sizeof(age)); 
                 if(movies[movie_index].minimum_age == 19 && age < 19){
                     printf("R-grade movie. Send warning message\n");
                     adult = 0;
@@ -108,29 +108,30 @@ int handle_client(int client_socket, FILE *fp, int num_movies) {
             if (adult == 0){
                 continue;
             }
-            //11. 총 가격 받기
-            read(client_socket, &ticket_price, sizeof(ticket_price)); //11
+            // 9. 총 가격 받기
+            read(client_socket, &ticket_price, sizeof(ticket_price)); 
             printf("Ticket price : %d\n", ticket_price);
             printf("Last ticket : %d\n", movies[movie_index].last_ticket);
             movies[movie_index].last_ticket -= num_people; //영화남은 인원에서 현재 인원을 뺌
             
-            //12. 좌석 선택하기
+            // 좌석 선택하기
             for(int i=0; i<num_people; i++){
                 while(1){
-                    //현재 좌석 상황 보내기
+                    // 10. 현재 좌석 상황 보내기
                     for (int i = 0; i < NUM_ROWS; i++) {
                         for (int j = 0; j < NUM_COLS; j++) {
                             write(client_socket, &movies[movie_index].seat_status[i][j], sizeof(movies[movie_index].seat_status[i][j]));//12
                         }
                     }
 
-                    //좌석입력받기
-                    read(client_socket, &row, sizeof(row));//13
-                    read(client_socket, &col, sizeof(col));//14
+                    // 11. 좌석 행렬 입력받기
+                    read(client_socket, &row, sizeof(row));
+                    read(client_socket, &col, sizeof(col));
                     row = row-1;
                     col = col-1;
+
                     int seat_selection_result;
-                    //좌석이 유효한지 검사
+                    // 좌석이 유효한지 검사
                     if (row < 0 || row >= NUM_ROWS || col < 0 || col >= NUM_COLS) {
                         seat_selection_result = 0; // 좌석이 유효하지 않음
                     }
@@ -143,7 +144,7 @@ int handle_client(int client_socket, FILE *fp, int num_movies) {
                             seat_selection_result = 1;
                         }
                     }
-                    
+                    // 12. 좌석 유효 검사 하기, 좌석 선점하기
                     write(client_socket, &seat_selection_result, sizeof(seat_selection_result));//15
                     if (seat_selection_result==1) {
                         printf("Seat selected: [%d, %d]\n", row, col);
@@ -161,6 +162,7 @@ int handle_client(int client_socket, FILE *fp, int num_movies) {
                     }
                 }
             }
+            // 파일에 업데이트 된 내용 입력하기
             fseek(fp, (movie_index)*sizeof(Movie),SEEK_SET);
             fwrite(&movies[movie_index], sizeof(Movie), 1, fp);
             break;
